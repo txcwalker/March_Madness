@@ -5,14 +5,15 @@ Status legend: `done` | `in-progress` | `pending` | `modified`
 | Item | Status | Target |
 |---|---|---|
 | Standing: Audit / Cleanup / Reorg / Modularity | in-progress | ongoing |
+| Standing: Year-over-Year Reuse & Post-Mortem Evaluation | pending | ongoing |
 | Documentation backbone | done | 2026-07-22 |
 | Git repository initialized | done | 2026-07-22 |
 | **Milestone 1: Port & Modularize Existing Product** | **in-progress** | **TBD** |
-| — Dependency manifest (pyproject.toml) | pending | TBD |
+| — Dependency manifest (pyproject.toml) | done | 2026-07-22 |
 | — .gitignore | done | 2026-07-22 |
-| — Repo skeleton (config/, src/, scripts/, notebooks/, tests/, data/, reports/) | pending | TBD |
-| — config/season.yaml schema | pending | TBD |
-| — Config loader (src/march_madness/config.py) | pending | TBD |
+| — Repo skeleton (config/, src/, scripts/, notebooks/, tests/, data/, reports/) | done | 2026-07-22 |
+| — config/season.yaml schema (incl. per-year data layout) | done | 2026-07-22 |
+| — Config loader (src/march_madness/config.py) | done | 2026-07-22 |
 | — Bracket structure module (format-agnostic rounds/slots) | pending | TBD |
 | — Kaggle ingest module | pending | TBD |
 | — KenPom ingest automation | pending | TBD |

@@ -8,16 +8,18 @@ Rebuild of a March Madness bracket prediction/simulation project. Ground-up rest
 
 ## Current Priorities
 
-1. Repo skeleton + `pyproject.toml` (not yet created)
-2. `config/season.yaml` + loader
-3. `bracket/structure.py` (config-driven rounds/slots — see Fragile Areas)
-4. `ingest/kenpom.py` (automates the header-row/rank-column cleanup described below)
+1. `bracket/structure.py` (config-driven rounds/slots — see Fragile Areas)
+2. `ingest/kaggle.py` and `ingest/kenpom.py` (the latter automates the header-row/rank-column cleanup described below)
+3. `features/build_features.py`, then `models/`
 
-Nothing beyond documentation exists in this repo yet. Do not assume any module below is implemented until it appears in Active Files.
+Repo skeleton, `pyproject.toml`, and the config module are done (see Active Files). Do not assume any other module is implemented until it appears here.
 
 ## Active Files
 
-None yet — documentation only (this file, `README.md`, `DEVELOPMENT.md`, `WORKLOG.md`, `GOAL_TRACKER.md`).
+- `config/season.yaml` — year + bracket format (size, num_rounds, num_play_in_games). Per-year data paths derive from `year`; edit this file to change season.
+- `src/march_madness/config.py` — `load_season_config()` returns a `SeasonConfig` (year, bracket settings, `raw_dir`/`processed_dir`/`outputs_dir` under `data/<kind>/<year>/`). This is the only place that should ever construct a year-specific data path — don't hardcode `data/raw/...` elsewhere.
+- `tests/test_config.py` — covers config loading, per-year path derivation, and bracket-setting validation.
+- `src/march_madness/{ingest,features,models,bracket,analysis}/` — empty `__init__.py` placeholders, not yet implemented.
 
 ## Frozen / Legacy Zones
 
@@ -34,7 +36,11 @@ None yet — documentation only (this file, `README.md`, `DEVELOPMENT.md`, `WORK
 
 ## Verification & Test Commands
 
-Not yet established — no test suite or run commands exist. Update this section the moment `tests/` or `scripts/` are created.
+```
+pytest
+```
+
+Run this after any change to `src/march_madness/`. Add a corresponding test under `tests/` for every new module — `test_config.py` is the pattern to follow (temp-dir fixtures, no reliance on real season data).
 
 ## Fragile Areas
 

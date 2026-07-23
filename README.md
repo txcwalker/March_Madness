@@ -12,7 +12,7 @@ See [AGENTS.md](AGENTS.md) for the AI handoff contract, [DEVELOPMENT.md](DEVELOP
 
 ## Goals
 
-1. **One-config season changeover.** A single `config/season.yaml` (year, bracket size, round count, play-in game count) drives the whole pipeline — no hunting through files for hardcoded years or team counts.
+1. **One-config season changeover, with years kept side by side.** A single `config/season.yaml` (year, bracket size, round count, play-in game count) drives the whole pipeline — no hunting through files for hardcoded years or team counts. Reusing the repo each year means *toggling* between seasons, not overwriting the last one: `data/raw`, `data/processed`, and `data/outputs` are organized per-year (e.g. `data/raw/2026/`) so multiple seasons' data and results coexist, and changing `year` in config is what switches which one a run uses.
 2. **Format-agnostic bracket structure.** Bracket rounds/slots are generated from config, not hardcoded (`R1`...`R6`, "64 teams") — so the tournament's expansion (68 today, a rumored 76-team format in the future) is a config change, not a rewrite.
 3. **Automated KenPom ingest.** KenPom is subscription-gated and blocks scraping, so pulling the raw export stays a manual copy/paste — but everything after that (stripping repeated header rows from the paginated table, dropping rank-subscript columns, merging into the historical dataset) becomes code, replacing the old by-hand Excel cleanup.
 4. **One canonical implementation per model.** Logistic regression, random forest, XGBoost, neural net, and seed-KNN each live in a single source module. Notebooks are exploration-only and are never manually "ported" to `.py` again — that porting step was the root cause of the old project's production code drifting out of sync with working notebook logic.
@@ -33,11 +33,16 @@ Concrete standards enforced everywhere:
 - One canonical module per model/feature — notebooks are exploration-only and are never manually "ported" to `.py` again.
 - Real dependency manifest, `.gitignore`, and git history from the first commit.
 
+### Standing Priority — Year-over-Year Reuse & Post-Mortem Evaluation
+Also ongoing, not a one-time milestone: this repo needs to work the same way every March, indefinitely. Two concrete pieces:
+- **Multi-year data layout.** `data/{raw,processed,outputs}` are organized per-year rather than flat, so old seasons' data and results aren't overwritten and `config/season.yaml`'s `year` field is a genuine toggle, not a one-way door. This gets decided alongside `config/season.yaml` and the ingest modules (Milestone 1).
+- **Post-mortem / performance evaluation tooling.** Once a tournament concludes, compare the season's predictions against actual results to see how the model actually did (accuracy, calibration, which upsets were missed, etc.), and accumulate that across years. Design TBD — to be scoped together once there's at least one real season of predictions to evaluate against.
+
 ### Milestone 1 — Port & Modularize the Existing Product *(current focus)*
 Bring what already works — data ingest, feature engineering, the five prediction models, seed prediction, seed clustering, bracket simulation, round-advancement/fragility analysis — into the new modular structure at feature parity. Nothing new yet; this is the foundation everything else builds on.
 - [ ] Repo skeleton: `config/`, `src/march_madness/`, `scripts/`, `notebooks/`, `tests/`, `data/{raw,processed,outputs}`, `reports/`
 - [ ] Dependency manifest (`pyproject.toml`)
-- [ ] `config/season.yaml` schema + `src/march_madness/config.py` loader
+- [x] `config/season.yaml` schema + `src/march_madness/config.py` loader — includes the per-year data layout (`data/raw/<year>/`, etc.)
 - [ ] `src/march_madness/bracket/structure.py` — format-agnostic rounds/slots
 - [ ] `src/march_madness/ingest/kaggle.py` and `ingest/kenpom.py` (automates the header-row/rank-column cleanup)
 - [ ] `src/march_madness/features/build_features.py` — matchup pairing, conference tiers, `stat_swap`/`random_id`

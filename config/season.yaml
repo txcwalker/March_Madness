@@ -1,0 +1,14 @@
+# The one place a new season starts. To move to a new year, update `year`
+# (and the bracket block if the NCAA has changed the tournament format that
+# season) and rerun the pipeline -- nothing else needs to change.
+#
+# Each year's data lives in its own subfolder (data/raw/<year>/, etc.), so
+# switching `year` here toggles which season a run uses without touching or
+# overwriting any other season's data.
+
+year: 2026
+
+bracket:
+  size: 68              # total teams in the field, including First Four participants
+  num_rounds: 6          # rounds from Round of 64 through the Championship
+  num_play_in_games: 4   # "First Four" games; set to 0 for a format with none

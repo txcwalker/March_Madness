@@ -4,9 +4,9 @@ Workspace map for humans and AI. Update when the skeleton or setup changes.
 
 ## Status
 
-Documentation-only stage. No source code, config, or dependency manifest exists yet in this repo. This file describes the *planned* layout (agreed in design discussion) until each piece actually lands — planned items are marked accordingly.
+Skeleton stage. Folder structure and dependency manifest exist; modules are still empty (`__init__.py` placeholders only). No config schema, ingest, features, models, or bracket logic has been ported yet.
 
-## Active Code Areas (planned)
+## Active Code Areas
 
 ```
 config/                      # season.yaml: year, bracket_size, num_rounds, num_play_in_games
@@ -33,11 +33,24 @@ reports/                       # generated dashboard/presentation output
 
 ## Local Setup
 
-Not yet defined — no `pyproject.toml`/`requirements.txt` exists in this repo. First implementation task: stand up a manifest covering the dependencies observed in the legacy project's `.venv` (pandas, numpy, scikit-learn, xgboost, matplotlib, seaborn, tqdm, rapidfuzz, plotly, kaleido) and pare it down to what this rebuild actually uses.
+Requires **Python 3.10+** (matches the legacy project's interpreter; the system default `python` may resolve to an older version — use `py -3.10` or a full path if so).
+
+```
+python -m venv .venv
+.venv\Scripts\activate     # Windows
+pip install --upgrade pip  # old pip can't do editable installs from pyproject.toml alone
+pip install -e ".[dev]"
+```
+
+`pyproject.toml` lists dependencies carried over from the legacy project's `.venv` (pandas, numpy, scikit-learn, xgboost, matplotlib, seaborn, tqdm, rapidfuzz, plotly, kaleido) plus `pyyaml` for the config loader. The `dev` extra adds `pytest`. Pare the main list down as porting proceeds and it becomes clear what's actually used.
 
 ## Run Commands
 
-None yet — will be added here the moment `scripts/run_pipeline.py` exists. Do not reference commands that don't exist.
+```
+pytest                     # run the test suite (currently: tests/test_config.py)
+```
+
+No pipeline entry point yet — will be added here the moment `scripts/run_pipeline.py` exists.
 
 ## Generated Files
 

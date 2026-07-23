@@ -16,6 +16,14 @@ data/processed/
 data/outputs/
 reports/*.html
 
+# Packaging
+*.egg-info/
+build/
+dist/
+
+# Test artifacts
+.pytest_cache/
+
 # OS
 .DS_Store
 Thumbs.db
