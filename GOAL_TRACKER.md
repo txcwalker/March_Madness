@@ -15,8 +15,8 @@ Status legend: `done` | `in-progress` | `pending` | `modified`
 | — config/season.yaml schema (incl. per-year data layout) | done | 2026-07-22 |
 | — Config loader (src/march_madness/config.py) | done | 2026-07-22 |
 | — Bracket structure module (play-in-count-agnostic; R1-R6/64 fixed) | done | 2026-07-22 |
-| — Kaggle ingest module | pending | TBD |
-| — KenPom ingest automation | pending | TBD |
+| — Kaggle ingest module | done | 2026-07-22 |
+| — KenPom ingest automation | done | 2026-07-22 |
 | — Feature engineering module | pending | TBD |
 | — Logistic regression model | pending | TBD |
 | — Random forest model | pending | TBD |

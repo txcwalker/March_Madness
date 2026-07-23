@@ -44,7 +44,7 @@ Bring what already works — data ingest, feature engineering, the five predicti
 - [ ] Dependency manifest (`pyproject.toml`)
 - [x] `config/season.yaml` schema + `src/march_madness/config.py` loader — includes the per-year data layout (`data/raw/<year>/`, etc.)
 - [x] `src/march_madness/bracket/structure.py` — round classification (R1-R6, fixed), play-in-count-agnostic validation, and a fix for a real ordering bug found in the legacy simulator (see WORKLOG)
-- [ ] `src/march_madness/ingest/kaggle.py` and `ingest/kenpom.py` (automates the header-row/rank-column cleanup)
+- [x] `src/march_madness/ingest/kaggle.py` and `ingest/kenpom.py` (automates the header-row/rank-column cleanup, plus a real Excel date-mangling bug found and fixed — see WORKLOG)
 - [ ] `src/march_madness/features/build_features.py` — matchup pairing, conference tiers, `stat_swap`/`random_id`
 - [ ] `src/march_madness/models/` — logistic regression, random forest, XGBoost, neural net, seed KNN
 - [ ] `src/march_madness/bracket/simulate.py` — Monte Carlo engine ported from `sims_mens.py`

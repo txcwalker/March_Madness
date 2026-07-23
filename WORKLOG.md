@@ -37,3 +37,13 @@ Built `src/march_madness/bracket/structure.py`: fixed R1-R6 round classification
 Corrected `README.md`, `AGENTS.md`, and `GOAL_TRACKER.md` — they previously said (incorrectly, before this conversation) that hardcoding `R1`..`R6` would be a regression to avoid; fixed to reflect that those are legitimate fixed constants and `num_play_in_games` is the actual config-driven lever.
 
 **Next:** confirm with user before committing/pushing, then start on `ingest/kaggle.py` and `ingest/kenpom.py`.
+
+Built both ingest modules, grounded in real data the same way as `bracket/structure.py`.
+
+`ingest/kaggle.py`: `load_kaggle_data(kaggle_dir)` loads the seven Kaggle CSVs the pipeline actually uses (teams, seeds, slots, regular season/tourney compact results, conferences, team conferences) into a `KaggleData` bundle, with a clear error if a file's missing. Verified against the real, full 2026 Kaggle data directory from the legacy project (198K+ regular season game rows, etc.) — loads cleanly.
+
+`ingest/kenpom.py`: `clean_kenpom_export()` drops rank-subscript/blank columns, drops stray repeated header rows, splits Team/Seed and W/L apart, adds a Season column. `build_kenpom_history()` scans `data/raw/*/kenpom_raw.csv` and merges every available year — the automated replacement for re-pasting the full history by hand each season. Verified against the real `kenpom_2026_raw.csv` (365 teams) and found a real bug in the process: Excel silently reformats a `W-L` value like `20-12` into the date `20-Dec` whenever the loss count looks like a month number, corrupting ~90 of 365 teams' (25%) loss counts on every paste. Fixed by recovering the loss count from the month abbreviation. This had apparently been happening unnoticed. Deliberately did not reconcile KenPom team names to Kaggle `TeamID`s here (KenPom's names don't match Kaggle's `TeamID`-keyed names) — that belongs in `features/build_features.py`, next up.
+
+40 tests total (was 27; +3 kaggle, +10 kenpom including the Excel bug case), all passing. Docs updated (README.md, AGENTS.md, GOAL_TRACKER.md).
+
+**Next:** confirm with user before committing/pushing, then start on `features/build_features.py` (matchup pairing, conference tiers, and the KenPom-to-TeamID reconciliation deferred from ingest).
