@@ -13,7 +13,7 @@ See [AGENTS.md](AGENTS.md) for the AI handoff contract, [DEVELOPMENT.md](DEVELOP
 ## Goals
 
 1. **One-config season changeover, with years kept side by side.** A single `config/season.yaml` (year, bracket size, round count, play-in game count) drives the whole pipeline — no hunting through files for hardcoded years or team counts. Reusing the repo each year means *toggling* between seasons, not overwriting the last one: `data/raw`, `data/processed`, and `data/outputs` are organized per-year (e.g. `data/raw/2026/`) so multiple seasons' data and results coexist, and changing `year` in config is what switches which one a run uses.
-2. **Format-agnostic bracket structure.** Bracket rounds/slots are generated from config, not hardcoded (`R1`...`R6`, "64 teams") — so the tournament's expansion (68 today, a rumored 76-team format in the future) is a config change, not a rewrite.
+2. **Play-in-count-agnostic bracket structure.** The 64-team, 6-round main bracket (`R1`...`R6`) is a fixed convention from Kaggle's own data — that's not going away and isn't something to abstract. What changes with expansion is the play-in stage: `field_size = 64 + num_play_in_games` (68 = 64+4 today; a 76-team format would be 64+12). `bracket/structure.py` derives everything from `num_play_in_games`, so that stays a config change, not a rewrite.
 3. **Automated KenPom ingest.** KenPom is subscription-gated and blocks scraping, so pulling the raw export stays a manual copy/paste — but everything after that (stripping repeated header rows from the paginated table, dropping rank-subscript columns, merging into the historical dataset) becomes code, replacing the old by-hand Excel cleanup.
 4. **One canonical implementation per model.** Logistic regression, random forest, XGBoost, neural net, and seed-KNN each live in a single source module. Notebooks are exploration-only and are never manually "ported" to `.py` again — that porting step was the root cause of the old project's production code drifting out of sync with working notebook logic.
 5. **Real reproducibility.** A real dependency manifest, a `.gitignore`, and git history from the first commit.
@@ -28,7 +28,7 @@ Ongoing for the life of the project, not a phase to finish and move past. Every 
 
 Concrete standards enforced everywhere:
 - Season year, bracket size, round count, and play-in count come from one config (`config/season.yaml`), never hardcoded.
-- Bracket rounds/slots are generated from config, not hardcoded (`R1`...`R6`, "64 teams") — so the tournament's expansion (68 today, a rumored 76-team format in the future) is a config change, not a rewrite.
+- `R1`...`R6` and the 64-team main bracket are fixed (Kaggle's actual data format) and coded as such — what's config-driven is `num_play_in_games`, since `field_size = 64 + num_play_in_games` is the part that actually changes with tournament expansion.
 - KenPom's raw export stays a manual copy/paste (subscription-gated, blocks scraping) but everything downstream of that paste — stripping repeated header rows, dropping rank-subscript columns, merging into history — is code, not an Excel step.
 - One canonical module per model/feature — notebooks are exploration-only and are never manually "ported" to `.py` again.
 - Real dependency manifest, `.gitignore`, and git history from the first commit.
@@ -43,7 +43,7 @@ Bring what already works — data ingest, feature engineering, the five predicti
 - [ ] Repo skeleton: `config/`, `src/march_madness/`, `scripts/`, `notebooks/`, `tests/`, `data/{raw,processed,outputs}`, `reports/`
 - [ ] Dependency manifest (`pyproject.toml`)
 - [x] `config/season.yaml` schema + `src/march_madness/config.py` loader — includes the per-year data layout (`data/raw/<year>/`, etc.)
-- [ ] `src/march_madness/bracket/structure.py` — format-agnostic rounds/slots
+- [x] `src/march_madness/bracket/structure.py` — round classification (R1-R6, fixed), play-in-count-agnostic validation, and a fix for a real ordering bug found in the legacy simulator (see WORKLOG)
 - [ ] `src/march_madness/ingest/kaggle.py` and `ingest/kenpom.py` (automates the header-row/rank-column cleanup)
 - [ ] `src/march_madness/features/build_features.py` — matchup pairing, conference tiers, `stat_swap`/`random_id`
 - [ ] `src/march_madness/models/` — logistic regression, random forest, XGBoost, neural net, seed KNN
