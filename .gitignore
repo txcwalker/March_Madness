@@ -1,0 +1,21 @@
+# Environments
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.idea/
+.vscode/
+
+# Generated data (raw inputs are the only thing that should be hand-managed/tracked deliberately)
+data/processed/
+data/outputs/
+reports/*.html
+
+# OS
+.DS_Store
+Thumbs.db
