@@ -5,6 +5,7 @@ from march_madness.ingest.kaggle import load_kaggle_data
 
 FIXTURES = {
     "MTeams.csv": "TeamID,TeamName,FirstD1Season,LastD1Season\n1101,Abilene Chr,2014,2026\n",
+    "MTeamSpellings.csv": "TeamNameSpelling,TeamID\nabilene chr,1101\n",
     "MNCAATourneySeeds.csv": "Season,Seed,TeamID\n2024,W01,1163\n",
     "MNCAATourneySlots.csv": "Season,Slot,StrongSeed,WeakSeed\n2024,R1W1,W01,W16\n",
     "MRegularSeasonCompactResults.csv": (
@@ -33,6 +34,7 @@ def test_loads_all_expected_frames(tmp_path):
 
     assert isinstance(data.teams, pd.DataFrame)
     assert data.teams.iloc[0]["TeamName"] == "Abilene Chr"
+    assert data.team_spellings.iloc[0]["TeamNameSpelling"] == "abilene chr"
     assert data.seeds.iloc[0]["Seed"] == "W01"
     assert data.slots.iloc[0]["Slot"] == "R1W1"
     assert data.regular_season_results.iloc[0]["WScore"] == 81

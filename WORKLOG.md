@@ -47,3 +47,17 @@ Built both ingest modules, grounded in real data the same way as `bracket/struct
 40 tests total (was 27; +3 kaggle, +10 kenpom including the Excel bug case), all passing. Docs updated (README.md, AGENTS.md, GOAL_TRACKER.md).
 
 **Next:** confirm with user before committing/pushing, then start on `features/build_features.py` (matchup pairing, conference tiers, and the KenPom-to-TeamID reconciliation deferred from ingest).
+
+Built `features/build_features.py`, grounded in the legacy `ncaabwinsmodel.py`'s matchup-construction logic (read the real code rather than guessing). Two significant real-data findings, both fixed:
+
+1. **Team-name matching**: an exact `Team` == `TeamName` match (what the legacy project did) matched only 228/365 real 2026 teams (62%) — KenPom's "Iowa St." never equals Kaggle's "Iowa State", etc. Kaggle ships `MTeamSpellings.csv` specifically for this; using it instead recovered 352/365 (96%). Added `team_spellings` to `ingest/kaggle.py`'s `KaggleData`/`_FILES` (this required going back and editing the already-committed ingest module). `match_kenpom_teams()` now returns both matched and unmatched rows, so the remaining ~4% stays visible instead of silently disappearing like before.
+
+2. **Positional alignment bug**: the legacy tournament-game merge joined winner-rows to loser-rows by row position, not a real key — if either side's join with KenPom stats dropped a different row, this would silently pair unrelated games together. `build_matchup_history()` joins on an explicit `GameID` instead. Added a regression test that constructs exactly this scenario (one team missing KenPom data) and confirms the game is dropped cleanly rather than misaligned.
+
+Also found, while verifying against real data: KenPom's conference abbreviations drift over time just like `AdjEM`→`NetRtg` did — the legacy `conf_mapping` used `Pat` for the Patriot League, but the real 2026 export uses `PL`, and was also missing `BW`/`SC`/`BSth` entirely. Without these, 10% of real matchup rows got a silently null conference; fixed by adding the missing/current abbreviations to `KENPOM_TO_KAGGLE_CONFERENCE`. Re-verified: 0 null conferences on the real 5,265-row 2026 matchup history.
+
+Also ported `random_id`/`stat_swap` as `randomize_matchup_sides()` — vectorized instead of the legacy per-row Python loop (same behavior, meaningfully faster on the full multi-decade game history), and consolidated `conf_mapping`/`conference_tiers`, which existed as two inconsistent copies across `ncaabwinsmodel.py` and `seed_prediction.py` in the legacy project, into one canonical version.
+
+49 tests total (was 40; +9 in test_build_features.py), all passing. Verified end-to-end against real 2026 Kaggle + KenPom data. Docs updated (README.md, AGENTS.md, GOAL_TRACKER.md).
+
+**Next:** confirm with user before committing/pushing, then start on `models/` (logistic regression, random forest, XGBoost, neural net, seed KNN).

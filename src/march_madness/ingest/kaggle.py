@@ -9,6 +9,7 @@ import pandas as pd
 
 _FILES = {
     "teams": "MTeams.csv",
+    "team_spellings": "MTeamSpellings.csv",
     "seeds": "MNCAATourneySeeds.csv",
     "slots": "MNCAATourneySlots.csv",
     "regular_season_results": "MRegularSeasonCompactResults.csv",
@@ -21,6 +22,7 @@ _FILES = {
 @dataclass(frozen=True)
 class KaggleData:
     teams: pd.DataFrame
+    team_spellings: pd.DataFrame
     seeds: pd.DataFrame
     slots: pd.DataFrame
     regular_season_results: pd.DataFrame

@@ -17,7 +17,7 @@ Status legend: `done` | `in-progress` | `pending` | `modified`
 | — Bracket structure module (play-in-count-agnostic; R1-R6/64 fixed) | done | 2026-07-22 |
 | — Kaggle ingest module | done | 2026-07-22 |
 | — KenPom ingest automation | done | 2026-07-22 |
-| — Feature engineering module | pending | TBD |
+| — Feature engineering module | done | 2026-07-22 |
 | — Logistic regression model | pending | TBD |
 | — Random forest model | pending | TBD |
 | — XGBoost model | pending | TBD |
