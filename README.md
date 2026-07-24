@@ -38,7 +38,7 @@ Also ongoing, not a one-time milestone: this repo needs to work the same way eve
 - **Multi-year data layout.** `data/{raw,processed,outputs}` are organized per-year rather than flat, so old seasons' data and results aren't overwritten and `config/season.yaml`'s `year` field is a genuine toggle, not a one-way door. This gets decided alongside `config/season.yaml` and the ingest modules (Milestone 1).
 - **Post-mortem / performance evaluation tooling.** Once a tournament concludes, compare the season's predictions against actual results to see how the model actually did (accuracy, calibration, which upsets were missed, etc.), and accumulate that across years. Design TBD — to be scoped together once there's at least one real season of predictions to evaluate against.
 
-### Milestone 1 — Port & Modularize the Existing Product *(current focus)*
+### Milestone 1 — Port & Modularize the Existing Product *(complete)*
 Bring what already works — data ingest, feature engineering, the five prediction models, seed prediction, seed clustering, bracket simulation, round-advancement/fragility analysis — into the new modular structure at feature parity. Nothing new yet; this is the foundation everything else builds on.
 - [x] Repo skeleton: `config/`, `src/march_madness/`, `scripts/`, `notebooks/`, `tests/`, `data/{raw,processed,outputs}`, `reports/`
 - [x] Dependency manifest (`pyproject.toml`)
@@ -48,7 +48,10 @@ Bring what already works — data ingest, feature engineering, the five predicti
 - [x] `src/march_madness/features/build_features.py` — matchup history construction, team-name reconciliation via `MTeamSpellings.csv` (fixed a 38%→4% match failure rate — see WORKLOG), conference tiers, vectorized side-randomization
 - [x] `src/march_madness/models/` — logistic regression, random forest, XGBoost, neural net, seed KNN, plus a shared `common.py` for split/evaluate (replacing five near-duplicate copies — see WORKLOG)
 - [x] `src/march_madness/bracket/simulate.py` — Monte Carlo engine ported and cleaned from the old `sims_mens.py`, verified end-to-end on the real 2026 bracket (see WORKLOG)
-- [ ] Port seed clustering (`seed_clustering.py`) and existing round-count/fragility analysis
+- [x] `src/march_madness/models/seed_clustering.py` — unsupervised KMeans tiering, ported from `seed_clustering.py` (now reuses `ingest/kenpom.py` instead of its own redundant cleaning)
+- [x] `src/march_madness/analysis/round_advancement.py` and `analysis/region_strength.py` — round-count, "wins over seed expectation," Cinderella probability, Final Four combinations, and region strength, all generalized from the legacy project's hardcoded-per-season versions (see WORKLOG)
+
+All of Milestone 1 is built, tested, and verified end-to-end against real 2026 data. Still missing before this is a genuine "download this year's data and run one command" experience: a `scripts/` entry point wiring ingest → features → models → simulate → analysis together. Everything so far has been verified via manual scripts, not a single runnable pipeline — a good next step before or alongside Milestone 2.
 
 ### Milestone 2 — Presentation of Findings & Visualization
 Rebuild and extend the dashboard concept (`project_dashboard.html` in the old project) with better visualizations of simulation results, region strength, and bracket odds.

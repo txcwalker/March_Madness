@@ -8,7 +8,7 @@ Status legend: `done` | `in-progress` | `pending` | `modified`
 | Standing: Year-over-Year Reuse & Post-Mortem Evaluation | pending | ongoing |
 | Documentation backbone | done | 2026-07-22 |
 | Git repository initialized | done | 2026-07-22 |
-| **Milestone 1: Port & Modularize Existing Product** | **in-progress** | **TBD** |
+| **Milestone 1: Port & Modularize Existing Product** | **done** | **2026-07-22** |
 | — Dependency manifest (pyproject.toml) | done | 2026-07-22 |
 | — .gitignore | done | 2026-07-22 |
 | — Repo skeleton (config/, src/, scripts/, notebooks/, tests/, data/, reports/) | done | 2026-07-22 |
@@ -24,7 +24,8 @@ Status legend: `done` | `in-progress` | `pending` | `modified`
 | — Neural net model | done | 2026-07-22 |
 | — Seed KNN model | done | 2026-07-22 |
 | — Bracket Monte Carlo simulator | done | 2026-07-22 |
-| — Seed clustering + round-count/fragility analysis | pending | TBD |
+| — Seed clustering + round-count/fragility analysis | done | 2026-07-22 |
+| Pipeline entry point (scripts/run_pipeline.py) | pending | TBD |
 | Milestone 2: Presentation & Visualization | pending | TBD |
 | Milestone 3: Seed Prediction (depth beyond KNN baseline) | pending | TBD |
 | Milestone 4: Upset Finder & Cinderella Stories | pending | TBD |

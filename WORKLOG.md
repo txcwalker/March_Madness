@@ -100,3 +100,19 @@ Ran a full real end-to-end simulation on the actual 2026 bracket (2,000 Monte Ca
 The simulation's results are a strong real-world sanity check on the whole pipeline built this session: top simulated champions (Duke 33.2%, Michigan 23.9%, Arizona 17.9%) are exactly the top 3 teams by real KenPom rating from the start of this session — config, bracket structure, ingest, features, models, and simulation are all correctly wired together end-to-end on real data.
 
 **Next:** confirm with user before committing/pushing, then start on `analysis/` (region strength, upsets, round-advancement counts) and porting `seed_clustering.py` -- the last pieces of Milestone 1's port.
+
+Built the final two pieces of Milestone 1: `analysis/` and `models/seed_clustering.py`, closing out the whole milestone.
+
+Grounded in the rest of `sims_mens.py` (previously only read through the simulation loop, not the analysis code after it) and the already-read `seed_clustering.py`. The legacy analysis code was full of season-specific hardcoding that would need rebuilding by hand every year: a 56-team name-to-region dictionary, a "Fragility_Score" formula that hardcoded which specific team was each region's top seed, and a KenPom-to-Kaggle name-matching block (rapidfuzz + two 64-entry hardcoded lists) that `build_features.py`'s `MTeamSpellings.csv`-based matching already supersedes entirely. None of that got ported. Region is now derived from the seed code's first letter (Kaggle already encodes it -- no dict needed), and "top seed" is whoever has `Seed == 1` in that region, both computed from data instead of hardcoded.
+
+`models/seed_clustering.py` ports `cluster_teams()` (KMeans tiering) but drops the legacy file's own KenPom-cleaning code, which duplicated (and was less correct than -- it doesn't handle the Excel date-mangling bug) `ingest/kenpom.py`. Now just takes already-cleaned data.
+
+Caught a real bug before shipping, found via a synthetic-data test rather than the real-data check this time: `average_wins_by_team()`'s first draft averaged a team's wins only over the brackets it appeared in as a winner. Since `bracket.simulate`'s results only record slot winners, a team that loses game one in every bracket never appears at all -- averaging over "brackets appeared in" instead of "all brackets" silently inflates weak teams' averages by dropping their 0-win brackets from the denominator. The legacy project actually handled this correctly (an explicit team×bracket reindex with zero-fill before averaging); this port initially missed it. Fixed by requiring `team_ids` explicitly and dividing total wins by the total bracket count.
+
+12 new tests (`test_analysis.py`, `test_seed_clustering.py`), plus one test-fixture-only failure (an early clustering fixture varied only `NetRtg` between two synthetic groups while leaving 6 other features as pure noise, which swamped the real signal in KMeans -- fixed by making every realistic feature differ between the groups, not a code issue). 79 tests total, all passing.
+
+Verified everything end-to-end on the real 2026 simulation (2,000 brackets): round-advancement counts, wins-over-seed-expectation, Cinderella probabilities, Final Four combinations, region championship shares, and seed clustering all produce sane, mutually consistent results -- e.g. region X is confirmed as the most wide-open (41% of its championships won by its actual #1 seed, vs. 86-87% in the other three regions), and seed clustering's Tier 0 exactly matches the real top-NetRtg teams.
+
+**Milestone 1 (the full port) is now complete.** What's still missing: a `scripts/` entry point wiring everything into one runnable pipeline -- so far every module has only been verified via one-off manual scripts.
+
+**Next:** confirm with user before committing/pushing. Then either build the `scripts/` pipeline entry point, or move on to Milestone 2 (presentation/visualization) per user preference.
