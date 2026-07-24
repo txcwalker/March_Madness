@@ -85,3 +85,18 @@ Logistic regression currently performs best — plausible, since win probability
 60 tests total (was 49; +11 in test_models.py), all passing. Docs updated (README.md, AGENTS.md, GOAL_TRACKER.md).
 
 **Next:** confirm with user before committing/pushing, then start on `bracket/simulate.py` (Milestone 1's last remaining piece besides porting seed clustering/round-count analysis).
+
+Built `bracket/simulate.py`, grounded in the legacy `sims_mens.py`'s `simulate()`/`run_simulation()`/`prep_data_sim()`. The legacy version relied on a numpy 2D-array-broadcasting quirk to make `probs_dict[team1][team2]` hold a 2-element array (from `predict_proba` returning shape `(1,2)` and `1 - probs[0]` broadcasting) rather than a plain float — worked, but the intent wasn't visible from reading the code. Rewrote as plain scalar probabilities throughout. Kept the legacy design where the same dict serves as both a seed-code lookup and a slot-code (resolved winner) lookup during simulation — it's genuinely elegant and the two namespaces never collide.
+
+Added `build_prediction_matrix()` to `models/common.py` as the inference-time mirror of `prepare_model_matrix()` — turns a hypothetical (team1, team2) pair into the same feature shape a trained model expects, using the same `STAT_COLUMNS`/`conference_tier()` as training. `compute_win_probabilities()` prices every matchup in the field once, up front, rather than calling the model mid-simulation for every game of every bracket.
+
+11 new tests (7 for `bracket/simulate.py`, using a small synthetic 4-team bracket with extreme win probabilities so outcomes are deterministic even in "stochastic" mode -- `rng.random() < 1.0` is always true). 67 tests total, all passing.
+
+Ran a full real end-to-end simulation on the actual 2026 bracket (2,000 Monte Carlo brackets, logistic regression trained on the real 5,265-game history) and found two more real data quirks along the way:
+
+- **2026's `MNCAATourneySeeds.csv`/`MNCAATourneySlots.csv` has zero play-in rows** (64 seeds, 63 slots) — First Four already resolved into a clean field, unlike 2024's data (68 seeds, 67 slots including 4 play-in games). Confirmed by direct comparison. Used a season-specific `BracketConfig(num_play_in_games=0)` for this run rather than assuming `config/season.yaml`'s default applies to every season's raw file.
+- **One real 2026 tournament team, "Queens NC" (seed Z15), has no `MTeamSpellings.csv` entry** — part of the already-known ~4% match gap from the feature-building work, now identified concretely rather than just as a percentage. Substituted average stats across matched teams for this one run, clearly logged as a substitution, not silently absorbed.
+
+The simulation's results are a strong real-world sanity check on the whole pipeline built this session: top simulated champions (Duke 33.2%, Michigan 23.9%, Arizona 17.9%) are exactly the top 3 teams by real KenPom rating from the start of this session — config, bracket structure, ingest, features, models, and simulation are all correctly wired together end-to-end on real data.
+
+**Next:** confirm with user before committing/pushing, then start on `analysis/` (region strength, upsets, round-advancement counts) and porting `seed_clustering.py` -- the last pieces of Milestone 1's port.

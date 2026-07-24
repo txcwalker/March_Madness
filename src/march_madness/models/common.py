@@ -54,6 +54,33 @@ def prepare_model_matrix(games: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
     return features, games["Winner"]
 
 
+def build_prediction_matrix(team_stats: pd.DataFrame, pairs: list[tuple[int, int]]) -> pd.DataFrame:
+    """
+    Inputs: a per-team stats table indexed by TeamID (a Conf column plus
+            STAT_COLUMNS, one row per team) and a list of (team1_id, team2_id)
+            pairs.
+    Outputs: a feature matrix in the exact shape prepare_model_matrix()
+             produces for training -- one row per pair, team1's stats as
+             "_A", team2's as "_B" -- so a model trained via
+             prepare_model_matrix() can call .predict_proba() on it directly.
+    Purpose: the inference-time counterpart to prepare_model_matrix(): turns
+             a hypothetical matchup into the same feature shape the model
+             learned from. Used by bracket/simulate.py to price every
+             possible matchup before running the Monte Carlo simulation.
+    """
+    rows = []
+    for team1, team2 in pairs:
+        row: dict[str, float] = {}
+        for suffix, team_id in (("_A", team1), ("_B", team2)):
+            stats = team_stats.loc[team_id]
+            for col in STAT_COLUMNS:
+                row[col + suffix] = stats[col]
+            row["ConfTier" + suffix] = conference_tier(stats["Conf"])
+        rows.append(row)
+
+    return pd.DataFrame(rows, index=pd.MultiIndex.from_tuples(pairs, names=["TeamID1", "TeamID2"]))
+
+
 def split_features(
     X: pd.DataFrame, y: pd.Series, test_size: float = 0.2, random_state: int = 42
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:

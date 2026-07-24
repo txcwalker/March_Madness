@@ -23,7 +23,7 @@ Status legend: `done` | `in-progress` | `pending` | `modified`
 | — XGBoost model | done | 2026-07-22 |
 | — Neural net model | done | 2026-07-22 |
 | — Seed KNN model | done | 2026-07-22 |
-| — Bracket Monte Carlo simulator | pending | TBD |
+| — Bracket Monte Carlo simulator | done | 2026-07-22 |
 | — Seed clustering + round-count/fragility analysis | pending | TBD |
 | Milestone 2: Presentation & Visualization | pending | TBD |
 | Milestone 3: Seed Prediction (depth beyond KNN baseline) | pending | TBD |

@@ -40,14 +40,14 @@ Also ongoing, not a one-time milestone: this repo needs to work the same way eve
 
 ### Milestone 1 — Port & Modularize the Existing Product *(current focus)*
 Bring what already works — data ingest, feature engineering, the five prediction models, seed prediction, seed clustering, bracket simulation, round-advancement/fragility analysis — into the new modular structure at feature parity. Nothing new yet; this is the foundation everything else builds on.
-- [ ] Repo skeleton: `config/`, `src/march_madness/`, `scripts/`, `notebooks/`, `tests/`, `data/{raw,processed,outputs}`, `reports/`
-- [ ] Dependency manifest (`pyproject.toml`)
+- [x] Repo skeleton: `config/`, `src/march_madness/`, `scripts/`, `notebooks/`, `tests/`, `data/{raw,processed,outputs}`, `reports/`
+- [x] Dependency manifest (`pyproject.toml`)
 - [x] `config/season.yaml` schema + `src/march_madness/config.py` loader — includes the per-year data layout (`data/raw/<year>/`, etc.)
 - [x] `src/march_madness/bracket/structure.py` — round classification (R1-R6, fixed), play-in-count-agnostic validation, and a fix for a real ordering bug found in the legacy simulator (see WORKLOG)
 - [x] `src/march_madness/ingest/kaggle.py` and `ingest/kenpom.py` (automates the header-row/rank-column cleanup, plus a real Excel date-mangling bug found and fixed — see WORKLOG)
 - [x] `src/march_madness/features/build_features.py` — matchup history construction, team-name reconciliation via `MTeamSpellings.csv` (fixed a 38%→4% match failure rate — see WORKLOG), conference tiers, vectorized side-randomization
 - [x] `src/march_madness/models/` — logistic regression, random forest, XGBoost, neural net, seed KNN, plus a shared `common.py` for split/evaluate (replacing five near-duplicate copies — see WORKLOG)
-- [ ] `src/march_madness/bracket/simulate.py` — Monte Carlo engine ported from `sims_mens.py`
+- [x] `src/march_madness/bracket/simulate.py` — Monte Carlo engine ported and cleaned from the old `sims_mens.py`, verified end-to-end on the real 2026 bracket (see WORKLOG)
 - [ ] Port seed clustering (`seed_clustering.py`) and existing round-count/fragility analysis
 
 ### Milestone 2 — Presentation of Findings & Visualization
