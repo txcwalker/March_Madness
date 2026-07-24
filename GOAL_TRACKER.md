@@ -18,11 +18,11 @@ Status legend: `done` | `in-progress` | `pending` | `modified`
 | — Kaggle ingest module | done | 2026-07-22 |
 | — KenPom ingest automation | done | 2026-07-22 |
 | — Feature engineering module | done | 2026-07-22 |
-| — Logistic regression model | pending | TBD |
-| — Random forest model | pending | TBD |
-| — XGBoost model | pending | TBD |
-| — Neural net model | pending | TBD |
-| — Seed KNN model | pending | TBD |
+| — Logistic regression model | done | 2026-07-22 |
+| — Random forest model | done | 2026-07-22 |
+| — XGBoost model | done | 2026-07-22 |
+| — Neural net model | done | 2026-07-22 |
+| — Seed KNN model | done | 2026-07-22 |
 | — Bracket Monte Carlo simulator | pending | TBD |
 | — Seed clustering + round-count/fragility analysis | pending | TBD |
 | Milestone 2: Presentation & Visualization | pending | TBD |

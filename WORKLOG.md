@@ -61,3 +61,27 @@ Also ported `random_id`/`stat_swap` as `randomize_matchup_sides()` — vectorize
 49 tests total (was 40; +9 in test_build_features.py), all passing. Verified end-to-end against real 2026 Kaggle + KenPom data. Docs updated (README.md, AGENTS.md, GOAL_TRACKER.md).
 
 **Next:** confirm with user before committing/pushing, then start on `models/` (logistic regression, random forest, XGBoost, neural net, seed KNN).
+
+Built all five models in one pass, grounded in the four legacy model scripts (`ncaabwins_logreg.py`, `ncaabwins_randomforest.py`, `ncaabwins_nn.py`, `ncaawins_xg.py`) plus `seed_prediction.py`. All four legacy win-probability scripts duplicated the same split/scale/fit/evaluate boilerplate almost verbatim, with small inconsistent variations (different train/test ratios per model, two different ECE formulas, ~150-250 lines of near-identical plotting code each). Consolidated into `models/common.py` (`prepare_model_matrix`, `split_features`, `evaluate_classifier`, `train_and_evaluate`) shared by all four; each model file now only exposes `build_model()`. Deliberately left plotting out entirely — that's Milestone 2's job, not modeling's.
+
+Design decisions along the way:
+- `prepare_model_matrix()` explicitly excludes `Score_A/B` (the actual game score — leakage, unknown before the game happens) and `Seed_A/B` (null for ~80% of matchup rows, since only tournament teams ever have one) from the feature set. The legacy code already dropped scores for the same reason; this makes it an explicit, documented, tested exclusion rather than an implicit one.
+- Conference is encoded via `conference_tier()` (reusing `build_features.py`) rather than a fresh `LabelEncoder`, avoiding the false ordinality an arbitrary integer-coded categorical implies to a linear/distance-based model.
+- Tree-based models (`random_forest`, `xgboost_model`) are bare estimators, not scaler pipelines — scaling is mathematically a no-op for decision tree splits, so the legacy code's blanket scaling of every model was harmless but pointless for these two.
+- Fixed a real breakage: the legacy XGBoost script passed `use_label_encoder=False`, a parameter removed entirely from modern `xgboost` (raises `TypeError` if passed). Not carried forward.
+- `seed_knn.py` is structurally separate — trains on one row per team-*season* (only teams with a known seed), not per matchup. Evaluates with mean absolute seed error alongside accuracy, since seed is ordinal and a miss-by-1 is very different from a miss-by-14.
+
+Verified all five against real 2026 data end-to-end (5,265 real games for the four classifiers; the real 68 seeded teams for seed_knn) rather than only synthetic fixtures:
+
+| Model | Accuracy | ROC-AUC | Log Loss | Brier |
+|---|---|---|---|---|
+| Logistic Regression | 74.5% | 0.837 | 0.489 | 0.164 |
+| Random Forest | 70.6% | 0.769 | 0.627 | 0.201 |
+| XGBoost | 68.1% | 0.769 | 0.665 | 0.220 |
+| Neural Net | 70.1% | 0.790 | 0.564 | 0.192 |
+
+Logistic regression currently performs best — plausible, since win probability from KenPom efficiency-margin differential is close to genuinely logistic. `seed_knn` works end-to-end (best_k=1, mean absolute seed error 1.48) but is data-starved: this repo only has one real season (2026, 68 seeded teams) to train on, ~4 examples per seed class. Flagged in AGENTS.md as an expected limitation, not a bug — it improves automatically as more years' raw KenPom pastes accumulate under `data/raw/<year>/`.
+
+60 tests total (was 49; +11 in test_models.py), all passing. Docs updated (README.md, AGENTS.md, GOAL_TRACKER.md).
+
+**Next:** confirm with user before committing/pushing, then start on `bracket/simulate.py` (Milestone 1's last remaining piece besides porting seed clustering/round-count analysis).

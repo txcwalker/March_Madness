@@ -46,7 +46,7 @@ Bring what already works — data ingest, feature engineering, the five predicti
 - [x] `src/march_madness/bracket/structure.py` — round classification (R1-R6, fixed), play-in-count-agnostic validation, and a fix for a real ordering bug found in the legacy simulator (see WORKLOG)
 - [x] `src/march_madness/ingest/kaggle.py` and `ingest/kenpom.py` (automates the header-row/rank-column cleanup, plus a real Excel date-mangling bug found and fixed — see WORKLOG)
 - [x] `src/march_madness/features/build_features.py` — matchup history construction, team-name reconciliation via `MTeamSpellings.csv` (fixed a 38%→4% match failure rate — see WORKLOG), conference tiers, vectorized side-randomization
-- [ ] `src/march_madness/models/` — logistic regression, random forest, XGBoost, neural net, seed KNN
+- [x] `src/march_madness/models/` — logistic regression, random forest, XGBoost, neural net, seed KNN, plus a shared `common.py` for split/evaluate (replacing five near-duplicate copies — see WORKLOG)
 - [ ] `src/march_madness/bracket/simulate.py` — Monte Carlo engine ported from `sims_mens.py`
 - [ ] Port seed clustering (`seed_clustering.py`) and existing round-count/fragility analysis
 
