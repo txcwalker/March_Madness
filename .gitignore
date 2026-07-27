@@ -11,7 +11,15 @@ __pycache__/
 .idea/
 .vscode/
 
-# Generated data (raw inputs are the only thing that should be hand-managed/tracked deliberately)
+# Data -- all local-only. Kaggle competition data may carry redistribution
+# restrictions, so raw inputs stay untracked too, not just generated output.
+# Re-populate data/raw/<year>/ locally (Kaggle download + KenPom paste) after
+# cloning; see README.md/DEVELOPMENT.md. (Ignoring contents via "data/raw/*"
+# rather than the "data/raw/" directory itself, so the .gitkeep negation
+# below actually works -- git won't descend into a fully-ignored directory
+# to evaluate a negation inside it.)
+data/raw/*
+!data/raw/.gitkeep
 data/processed/
 data/outputs/
 reports/*.html

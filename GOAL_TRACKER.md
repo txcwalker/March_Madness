@@ -25,7 +25,7 @@ Status legend: `done` | `in-progress` | `pending` | `modified`
 | — Seed KNN model | done | 2026-07-22 |
 | — Bracket Monte Carlo simulator | done | 2026-07-22 |
 | — Seed clustering + round-count/fragility analysis | done | 2026-07-22 |
-| Pipeline entry point (scripts/run_pipeline.py) | pending | TBD |
+| Pipeline entry point (scripts/run_pipeline.py) | done | 2026-07-22 |
 | Milestone 2: Presentation & Visualization | pending | TBD |
 | Milestone 3: Seed Prediction (depth beyond KNN baseline) | pending | TBD |
 | Milestone 4: Upset Finder & Cinderella Stories | pending | TBD |

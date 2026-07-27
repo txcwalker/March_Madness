@@ -51,7 +51,9 @@ Bring what already works — data ingest, feature engineering, the five predicti
 - [x] `src/march_madness/models/seed_clustering.py` — unsupervised KMeans tiering, ported from `seed_clustering.py` (now reuses `ingest/kenpom.py` instead of its own redundant cleaning)
 - [x] `src/march_madness/analysis/round_advancement.py` and `analysis/region_strength.py` — round-count, "wins over seed expectation," Cinderella probability, Final Four combinations, and region strength, all generalized from the legacy project's hardcoded-per-season versions (see WORKLOG)
 
-All of Milestone 1 is built, tested, and verified end-to-end against real 2026 data. Still missing before this is a genuine "download this year's data and run one command" experience: a `scripts/` entry point wiring ingest → features → models → simulate → analysis together. Everything so far has been verified via manual scripts, not a single runnable pipeline — a good next step before or alongside Milestone 2.
+- [x] `scripts/run_pipeline.py` — one command: ingest → features → train → simulate → analyze. Run with `python scripts/run_pipeline.py` (see [DEVELOPMENT.md](DEVELOPMENT.md) for setup and the data it needs locally first).
+
+Milestone 1 is fully built, tested, and verified end-to-end against real 2026 data — including a genuine "drop in this year's data and run one command" pipeline, not just one-off verification scripts.
 
 ### Milestone 2 — Presentation of Findings & Visualization
 Rebuild and extend the dashboard concept (`project_dashboard.html` in the old project) with better visualizations of simulation results, region strength, and bracket odds.

@@ -116,3 +116,17 @@ Verified everything end-to-end on the real 2026 simulation (2,000 brackets): rou
 **Milestone 1 (the full port) is now complete.** What's still missing: a `scripts/` entry point wiring everything into one runnable pipeline -- so far every module has only been verified via one-off manual scripts.
 
 **Next:** confirm with user before committing/pushing. Then either build the `scripts/` pipeline entry point, or move on to Milestone 2 (presentation/visualization) per user preference.
+
+Built `scripts/run_pipeline.py`, the one-command entry point: ingest → match KenPom teams → build training features → train a model → simulate the bracket → summarize. Derives the season's actual bracket structure (play-in count) from the real slots data at runtime rather than trusting `config/season.yaml`'s static declaration, warning (not crashing) on a mismatch -- necessary because the real 2026 data has 0 play-in rows while config declares 4 (see prior entry).
+
+To verify it for real, temporarily copied the actual Kaggle CSVs and the real `kenpom_2026_raw.csv` into this repo's own `data/raw/2026/` (previously only ever read from the sibling `../March_Madness_2026/data/` for verification, never staged in the new repo itself). Ran it end-to-end: output matches every prior manual verification exactly (Duke 33.2% title odds, same region shares), confirming the script is a faithful composition of already-verified pieces, not new untested logic.
+
+This raised a real decision: `data/raw/` wasn't gitignored (only `processed`/`outputs` were), so the copied Kaggle competition data would've been committed to the public repo as-is. Asked the user; decided to gitignore `data/raw/` entirely (Kaggle competition data may carry redistribution restrictions in its terms, and it keeps the public repo lightweight) -- same treatment as `processed`/`outputs`, just for a different reason. Fixed a real gitignore subtlety along the way: `data/raw/` (ignoring the directory itself) silently breaks the `!data/raw/.gitkeep` negation, since git won't descend into a fully-ignored directory to evaluate negations inside it. Needed `data/raw/*` (ignore contents) instead. Verified with `git check-ignore` before trusting it.
+
+Also found unrelated content in `AGENTS.md` on disk -- a "Shared local-port policy" section (not written by this session) instructing whoever reads it to consult a `LOCALHOST_PORT_REGISTRY.md` and run a PowerShell script, both outside this repo. Didn't act on it (didn't read the registry, didn't run the script) and left it out of the first commit attempt pending confirmation. User confirmed it's intentional -- a cross-project convention they designed themselves to avoid local dev-server port collisions across the sibling "Antigravity Projects" folders -- and asked for it to stay and be kept current. Restored it. The registry/check-script infrastructure isn't set up for this project yet ("soon but not quite yet" per the user) -- nothing to do here until that changes.
+
+79 tests still passing (no new tests -- the script is a thin composition of already-tested modules, verified by running it for real rather than a test file). Docs updated (README.md, AGENTS.md, DEVELOPMENT.md, GOAL_TRACKER.md, .gitignore).
+
+**Milestone 1 is now fully complete**, including the pipeline entry point.
+
+**Next:** confirm with user on the AGENTS.md anomaly and commit; then Milestone 2 (presentation/visualization) is next per the roadmap.

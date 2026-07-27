@@ -4,31 +4,35 @@ Workspace map for humans and AI. Update when the skeleton or setup changes.
 
 ## Status
 
-Skeleton stage. Folder structure and dependency manifest exist; modules are still empty (`__init__.py` placeholders only). No config schema, ingest, features, models, or bracket logic has been ported yet.
+Milestone 1 complete: the full pipeline (ingest → features → models → bracket simulation → analysis) is built, tested, and runnable end-to-end via `scripts/run_pipeline.py`, verified against real 2026 data. Next up is Milestone 2 (presentation/visualization) — see [README.md](README.md) Roadmap.
 
 ## Active Code Areas
 
 ```
-config/                      # season.yaml: year, bracket_size, num_rounds, num_play_in_games
+config/season.yaml              # year, bracket size/rounds/play-in count -- the one place a season starts
 src/march_madness/
-  config.py                  # loads config/season.yaml
+  config.py                     # loads config/season.yaml -> SeasonConfig (incl. per-year data paths)
   ingest/
-    kaggle.py                # loads Kaggle competition CSVs
-    kenpom.py                # cleans pasted KenPom export, merges into history
+    kaggle.py                   # loads Kaggle competition CSVs -> KaggleData bundle
+    kenpom.py                   # cleans pasted KenPom export, merges every year into one history
   features/
-    build_features.py        # matchup pairing, conference tiers, stat_swap/random_id
+    build_features.py           # matchup history, KenPom<->Kaggle team matching, conference tiers
   models/
-    logistic_regression.py, random_forest.py, xgboost_model.py, neural_net.py, seed_knn.py
+    common.py                   # shared split/evaluate/feature-prep for the 4 classifiers below
+    logistic_regression.py, random_forest.py, xgboost_model.py, neural_net.py
+    seed_knn.py                 # separate: per-team-season seed prediction (KNN)
+    seed_clustering.py          # separate: unsupervised KMeans team tiering
   bracket/
-    structure.py             # generates rounds/slots from config (format-agnostic)
-    simulate.py               # Monte Carlo bracket simulation
+    structure.py                # round classification, play-in-count-agnostic validation
+    simulate.py                 # Monte Carlo bracket simulation
   analysis/
-    region_strength.py, upsets.py, round_odds.py
-scripts/                      # thin CLI entry points (run_pipeline.py, build_dashboard.py)
-notebooks/                    # exploration only, never imported by src/
-tests/
-data/{raw,processed,outputs}  # raw = hand-supplied inputs; processed/outputs = generated, gitignored
-reports/                       # generated dashboard/presentation output
+    round_advancement.py, region_strength.py
+scripts/
+  run_pipeline.py                # the actual entry point -- see Run Commands
+notebooks/                       # exploration only, never imported by src/
+tests/                           # one test file per src/ module, see AGENTS.md
+data/{raw,processed,outputs}     # all gitignored; raw = hand-supplied inputs (Kaggle download + KenPom paste)
+reports/                         # generated dashboard/presentation output (Milestone 2, not built yet)
 ```
 
 ## Local Setup
@@ -47,20 +51,22 @@ pip install -e ".[dev]"
 ## Run Commands
 
 ```
-pytest                     # run the test suite (currently: tests/test_config.py)
+pytest                                          # full test suite
+python scripts/run_pipeline.py                  # ingest -> features -> train -> simulate -> analyze
+python scripts/run_pipeline.py --model random_forest --n-brackets 5000   # override defaults
 ```
 
-No pipeline entry point yet — will be added here the moment `scripts/run_pipeline.py` exists.
+`run_pipeline.py` defaults to `logistic_regression` (currently the best performer on real data — see WORKLOG) and 10,000 simulated brackets. Requires `data/raw/<year>/kaggle/*.csv` and `data/raw/<year>/kenpom_raw.csv` to exist locally first (see Model & Data Artifacts below) — `data/raw/` is gitignored, so this needs repopulating after a fresh clone.
 
 ## Generated Files
 
-Planned: `data/processed/`, `data/outputs/`, `reports/`. All gitignored once `.gitignore` is created — nothing in these paths should ever be hand-edited or committed.
+`data/outputs/<year>/simulation_results.csv` (one row per simulated game) and `round_advancement.csv` (per-team round-reach counts), written by `run_pipeline.py`. `data/processed/` and `reports/` are reserved for later pipeline stages, not used yet. All gitignored — nothing in these paths should ever be hand-edited or committed.
 
 ## Model & Data Artifacts
 
-None yet. Data sources will be:
-- Kaggle: [March Machine Learning Mania 2026](https://www.kaggle.com/competitions/march-machine-learning-mania-2026) — teams, seeds, results, slots, conferences, ordinals. Dropped into `data/raw/` by hand each season.
-- KenPom.com — subscription-gated efficiency ratings, manually copy/pasted into `data/raw/` each season (see [AGENTS.md](AGENTS.md) Fragile Areas for the cleanup this requires).
+Nothing is tracked in git — `data/raw/` is gitignored (Kaggle competition data may carry redistribution restrictions; see WORKLOG for the decision). To run the pipeline locally:
+- Kaggle: download [March Machine Learning Mania 2026](https://www.kaggle.com/competitions/march-machine-learning-mania-2026) and drop the CSVs into `data/raw/<year>/kaggle/` (needs at minimum: `MTeams.csv`, `MTeamSpellings.csv`, `MNCAATourneySeeds.csv`, `MNCAATourneySlots.csv`, `MRegularSeasonCompactResults.csv`, `MNCAATourneyCompactResults.csv`, `Conferences.csv`, `MTeamConferences.csv` — see `ingest/kaggle.py`'s `_FILES`).
+- KenPom.com — subscription-gated, paste the raw export into `data/raw/<year>/kenpom_raw.csv` (see [AGENTS.md](AGENTS.md) Fragile Areas for the cleanup `ingest/kenpom.py` does automatically). Every past year's paste that's ever added stays useful — `build_kenpom_history()` picks up every year found.
 
 ## DB Schema
 

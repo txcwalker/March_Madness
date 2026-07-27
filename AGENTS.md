@@ -8,9 +8,9 @@ Rebuild of a March Madness bracket prediction/simulation project. Ground-up rest
 
 ## Current Priorities
 
-Milestone 1 (the full port) is complete — every module below is done and verified against real data. What's missing is a `scripts/` entry point that wires ingest → features → models → simulate → analysis into one runnable "download this year's data and run one command" pipeline. Everything so far has only been verified via one-off manual scripts, not a single command. That's the natural next step, alongside starting Milestone 2 (presentation/visualization).
+Milestone 1 (the full port, including a working `scripts/run_pipeline.py` entry point) is complete and verified against real data end-to-end. Next up is Milestone 2 (presentation/visualization) — see README.md Roadmap.
 
-Repo skeleton, `pyproject.toml`, config module, bracket structure module, both ingest modules, the feature-building module, all five `models/` (plus `seed_clustering.py`), `bracket/simulate.py`, and `analysis/` are done (see Active Files). Do not assume any other module is implemented until it appears here.
+Repo skeleton, `pyproject.toml`, config module, bracket structure module, both ingest modules, the feature-building module, all five `models/` (plus `seed_clustering.py`), `bracket/simulate.py`, `analysis/`, and `scripts/run_pipeline.py` are done (see Active Files). Do not assume any other module is implemented until it appears here.
 
 ## Active Files
 
@@ -28,7 +28,8 @@ Repo skeleton, `pyproject.toml`, config module, bracket structure module, both i
 - `src/march_madness/models/seed_clustering.py` — `cluster_teams(kenpom, n_clusters=5)` unsupervised KMeans tiering. Complements `seed_knn.py` (doesn't need a labeled tournament seed, so it works on every KenPom-covered team, not just the ~68 in the tournament). Takes already-cleaned `ingest.kenpom` output, unlike the legacy version which had its own (inferior — doesn't handle the Excel date-mangling bug) cleaning logic.
 - `src/march_madness/analysis/round_advancement.py` — `round_advancement_counts()`, `average_wins_by_team()` (see Fragile Areas — has a non-obvious correct denominator), `wins_over_seed_expectation()` (compares to `HISTORICAL_AVERAGE_WINS_BY_SEED`, a cited real external baseline), `cinderella_probability()`, `final_four_combination_counts()`. All generalized from the legacy project's per-season-hardcoded versions — none of these take a team name or region dict as a hardcoded constant.
 - `src/march_madness/analysis/region_strength.py` — `region_of_seed()` derives region from the seed code's first letter (no 56-team hardcoded dict like the legacy project needed); `region_championship_counts()`, `region_top_seed_championship_share()` (generalizes the legacy "Fragility_Score").
-- `tests/test_config.py`, `tests/test_bracket_structure.py`, `tests/test_kaggle_ingest.py`, `tests/test_kenpom_ingest.py`, `tests/test_build_features.py`, `tests/test_models.py`, `tests/test_bracket_simulate.py` — the ingest/feature tests are verified against real legacy-project data (2024 `MNCAATourneySlots.csv`, the full 2026 Kaggle CSV set including `MTeamSpellings.csv`, and the real `kenpom_2026_raw.csv`); `test_models.py`/`test_bracket_simulate.py` use fast synthetic data (extreme win probabilities for deterministic assertions), with a full real-2026-bracket simulation done manually (see WORKLOG) rather than baked into the test suite.
+- `scripts/run_pipeline.py` — the actual entry point: `python scripts/run_pipeline.py [--model {logistic_regression,random_forest,xgboost_model,neural_net}] [--n-brackets N] [--config PATH]`. Wires ingest → features → train → simulate → analysis together; writes `data/outputs/<year>/simulation_results.csv` and `round_advancement.csv`. Derives the season's actual bracket structure from the real slots data rather than trusting `config/season.yaml`'s static declaration (see Fragile Areas on why) and warns (doesn't crash) on a mismatch. No test file — it's a thin composition of already-tested modules; verified by running it for real (see WORKLOG).
+- `tests/test_config.py`, `tests/test_bracket_structure.py`, `tests/test_kaggle_ingest.py`, `tests/test_kenpom_ingest.py`, `tests/test_build_features.py`, `tests/test_models.py`, `tests/test_bracket_simulate.py`, `tests/test_analysis.py`, `tests/test_seed_clustering.py` — the ingest/feature tests are verified against real legacy-project data (2024 `MNCAATourneySlots.csv`, the full 2026 Kaggle CSV set including `MTeamSpellings.csv`, and the real `kenpom_2026_raw.csv`); model/analysis tests use fast synthetic data (extreme probabilities for deterministic assertions), with full real-2026-data runs done manually or via `scripts/run_pipeline.py` (see WORKLOG) rather than baked into the test suite.
 
 ## Frozen / Legacy Zones
 
@@ -71,4 +72,12 @@ Run this after any change to `src/march_madness/`. Add a corresponding test unde
 
 ## Generated Artifacts
 
-None yet. Once the pipeline exists: `data/processed/`, `data/outputs/`, and `reports/` will hold pipeline-generated files — gitignored, never hand-edited, always safe to delete and regenerate.
+`data/outputs/<year>/simulation_results.csv` and `round_advancement.csv`, written by `scripts/run_pipeline.py`. `data/processed/` and `reports/` are reserved for future pipeline stages. All gitignored, never hand-edited, always safe to delete and regenerate.
+
+# Shared local-port policy
+
+Before adding or changing a local development service, read the shared
+[`LOCALHOST_PORT_REGISTRY.md`](../LOCALHOST_PORT_REGISTRY.md), reserve the port
+there, and update the registry in the same change. Run
+`powershell -ExecutionPolicy Bypass -File ../tools/check-localhost-ports.ps1`
+before finishing port-related work.
