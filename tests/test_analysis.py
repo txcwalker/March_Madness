@@ -5,6 +5,7 @@ from march_madness.analysis.region_strength import (
     region_championship_counts,
     region_of_seed,
     region_top_seed_championship_share,
+    region_top_seed_final_four_share,
 )
 from march_madness.analysis.round_advancement import (
     average_wins_by_team,
@@ -146,3 +147,18 @@ def test_region_top_seed_championship_share():
 
     assert shares["W"] == 1.0  # W's only championship was won by its #1 seed (101)
     assert shares["X"] == 0.0  # X's championship was won by its #8 seed (202), not its #1 seed (201)
+
+
+def test_region_top_seed_final_four_share_uses_all_brackets_as_the_denominator():
+    results = make_synthetic_results()
+    shares = region_top_seed_final_four_share(results, SEED_TO_TEAM)
+
+    # Every region's #1 seed reaches R4 in bracket 1 only (not bracket 2, where
+    # either an upset seed represents the region instead, or the region's team
+    # lost before R4 at all) -> 1 of 2 brackets for every region, unlike
+    # region_top_seed_championship_share which only looks at brackets a
+    # region actually won outright.
+    assert shares["W"] == 0.5
+    assert shares["X"] == 0.5
+    assert shares["Y"] == 0.5
+    assert shares["Z"] == 0.5

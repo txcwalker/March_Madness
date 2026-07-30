@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Round Odds · March Madness Analytics</title>
+<link rel="stylesheet" href="../static/style.css">
+</head>
+<body>
+<nav class="site-nav">
+  <a class="brand" href="../index.html">March Madness Analytics</a>
+  <a href="../index.html">Articles</a>
+  <a href="../analytics/round_odds.html">Round Odds</a>
+  <a href="../analytics/over_underperformers.html">Over/Underperformers</a>
+  <a href="../analytics/cinderella.html">Cinderella Watch</a>
+  <a href="../analytics/final_four_finder.html">Final Four Finder</a>
+  <a href="../analytics/region_strength.html">Region Strength</a>
+  <a href="../analytics/seed_prediction.html">Seed Prediction</a>
+  <span class="spacer"></span>
+  <button class="theme-toggle" type="button">Toggle theme</button>
+</nav>
+<main class="">
+
+<h1>Round Odds</h1>
+<p class="subtitle">Probability of reaching each round, from 10,000 simulated brackets.</p>
+
+
+
+
+<div class="chart-container"><div style="height:450px; width:100%;">                        <script>window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.7.0.min.js" integrity="sha256-jvTGqxNp8AGWEcvNLVuKr+8j5dGe9Yw51LQkmDH+IYA=" crossorigin="anonymous"></script>                <div id="84310b4e-2dcd-4eb9-8d80-e9e73f33f609" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script>                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("84310b4e-2dcd-4eb9-8d80-e9e73f33f609")) {                    Plotly.newPlot(                        "84310b4e-2dcd-4eb9-8d80-e9e73f33f609",                        [{"marker":{"color":"#2a78d6"},"orientation":"h","x":{"dtype":"f8","bdata":"61G4HoVrQUD2KFyPwrU3QMP1KFyPgjFAcT0K16NwFEBSuB6F61EUQHE9CtejcAlAmZmZmZmZ\u002fT+5HoXrUbj2Pylcj8L1KPQ\u002fj8L1KFyP6j\u002f1KFyPwvXoP65H4XoUruc\u002fwvUoXI\u002fC5T8pXI\u002fC9SjkP\u002fYoXI\u002fC9eA\u002f"},"y":["Duke","Michigan","Arizona","Florida","Houston","Iowa St","Connecticut","Purdue","Illinois","Michigan St","Kansas","Nebraska","St John's","Virginia","Vanderbilt"],"type":"bar"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"yaxis":{"autorange":"reversed"},"title":{"text":"Top 15 championship odds"},"xaxis":{"title":{"text":"Championship probability (%)"}},"height":450,"font":{"family":"system-ui, -apple-system, 'Segoe UI', sans-serif"},"margin":{"l":10,"r":10,"t":40,"b":10},"paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)"},                        {"displayModeBar": false, "responsive": true}                    )                };            </script>        </div></div>
+
+
+
+<h2>All teams</h2>
+<div class="data-table-wrap">
+<table class="data-table">
+  <thead><tr><th>Team</th><th>Round of 32</th><th>Sweet Sixteen</th><th>Elite Eight</th><th>Final Four</th><th>Championship Game</th><th>Champion</th></tr></thead>
+  <tbody>
+    
+    <tr><td>Duke</td><td>99.6%</td><td>93.5%</td><td>80.3%</td><td>68.2%</td><td>53.9%</td><td>34.8%</td></tr>
+    
+    <tr><td>Michigan</td><td>99.6%</td><td>94.3%</td><td>83.5%</td><td>66.0%</td><td>44.1%</td><td>23.7%</td></tr>
+    
+    <tr><td>Arizona</td><td>99.6%</td><td>90.6%</td><td>79.3%</td><td>65.0%</td><td>33.0%</td><td>17.5%</td></tr>
+    
+    <tr><td>Florida</td><td>99.8%</td><td>86.8%</td><td>61.4%</td><td>36.6%</td><td>11.8%</td><td>5.1%</td></tr>
+    
+    <tr><td>Houston</td><td>99.2%</td><td>84.3%</td><td>58.9%</td><td>31.3%</td><td>12.0%</td><td>5.1%</td></tr>
+    
+    <tr><td>Iowa St</td><td>99.0%</td><td>85.5%</td><td>60.2%</td><td>19.3%</td><td>9.3%</td><td>3.2%</td></tr>
+    
+    <tr><td>Connecticut</td><td>99.1%</td><td>76.6%</td><td>48.1%</td><td>11.9%</td><td>5.8%</td><td>1.8%</td></tr>
+    
+    <tr><td>Purdue</td><td>98.8%</td><td>83.1%</td><td>55.1%</td><td>15.2%</td><td>4.6%</td><td>1.4%</td></tr>
+    
+    <tr><td>Illinois</td><td>96.9%</td><td>73.2%</td><td>30.4%</td><td>12.9%</td><td>3.7%</td><td>1.3%</td></tr>
+    
+    <tr><td>Michigan St</td><td>96.6%</td><td>67.0%</td><td>31.4%</td><td>6.9%</td><td>3.0%</td><td>0.8%</td></tr>
+    
+    <tr><td>Kansas</td><td>93.2%</td><td>55.0%</td><td>9.1%</td><td>5.0%</td><td>2.2%</td><td>0.8%</td></tr>
+    
+    <tr><td>Nebraska</td><td>97.8%</td><td>57.8%</td><td>20.6%</td><td>9.1%</td><td>2.2%</td><td>0.7%</td></tr>
+    
+    <tr><td>St John's</td><td>94.7%</td><td>44.0%</td><td>8.1%</td><td>4.5%</td><td>2.3%</td><td>0.7%</td></tr>
+    
+    <tr><td>Virginia</td><td>98.3%</td><td>70.9%</td><td>27.0%</td><td>6.2%</td><td>2.2%</td><td>0.6%</td></tr>
+    
+    <tr><td>Vanderbilt</td><td>89.2%</td><td>40.8%</td><td>13.5%</td><td>6.6%</td><td>1.5%</td><td>0.5%</td></tr>
+    
+    <tr><td>Gonzaga</td><td>98.2%</td><td>71.6%</td><td>32.4%</td><td>8.4%</td><td>2.1%</td><td>0.5%</td></tr>
+    
+    <tr><td>Arkansas</td><td>95.3%</td><td>65.7%</td><td>11.8%</td><td>6.4%</td><td>1.5%</td><td>0.4%</td></tr>
+    
+    <tr><td>Louisville</td><td>85.1%</td><td>30.8%</td><td>11.0%</td><td>1.7%</td><td>0.5%</td><td>0.2%</td></tr>
+    
+    <tr><td>Texas Tech</td><td>89.9%</td><td>37.9%</td><td>5.6%</td><td>2.4%</td><td>0.9%</td><td>0.2%</td></tr>
+    
+    <tr><td>Alabama</td><td>95.1%</td><td>60.7%</td><td>8.8%</td><td>4.0%</td><td>1.2%</td><td>0.2%</td></tr>
+    
+    <tr><td>Wisconsin</td><td>92.6%</td><td>33.1%</td><td>5.0%</td><td>2.3%</td><td>0.4%</td><td>0.1%</td></tr>
+    
+    <tr><td>Ohio St</td><td>67.1%</td><td>4.8%</td><td>1.9%</td><td>0.7%</td><td>0.2%</td><td>0.1%</td></tr>
+    
+    <tr><td>North Carolina</td><td>75.8%</td><td>22.9%</td><td>5.5%</td><td>1.4%</td><td>0.3%</td><td>0.1%</td></tr>
+    
+    <tr><td>UCLA</td><td>64.5%</td><td>16.7%</td><td>6.8%</td><td>0.8%</td><td>0.2%</td><td>0.0%</td></tr>
+    
+    <tr><td>Tennessee</td><td>88.0%</td><td>27.8%</td><td>7.1%</td><td>1.1%</td><td>0.3%</td><td>0.0%</td></tr>
+    
+    <tr><td>Villanova</td><td>53.3%</td><td>4.7%</td><td>2.0%</td><td>0.5%</td><td>0.1%</td><td>0.0%</td></tr>
+    
+    <tr><td>BYU</td><td>78.3%</td><td>24.6%</td><td>6.3%</td><td>0.8%</td><td>0.1%</td><td>0.0%</td></tr>
+    
+    <tr><td>St Mary's CA</td><td>61.5%</td><td>11.7%</td><td>3.6%</td><td>0.8%</td><td>0.2%</td><td>0.0%</td></tr>
+    
+    <tr><td>Kentucky</td><td>69.9%</td><td>10.7%</td><td>4.5%</td><td>0.5%</td><td>0.1%</td><td>0.0%</td></tr>
+    
+    <tr><td>Georgia</td><td>61.3%</td><td>3.7%</td><td>1.5%</td><td>0.3%</td><td>0.1%</td><td>0.0%</td></tr>
+    
+    <tr><td>Utah St</td><td>46.7%</td><td>4.7%</td><td>1.9%</td><td>0.6%</td><td>0.1%</td><td>0.0%</td></tr>
+    
+    <tr><td>High Point</td><td>7.4%</td><td>0.6%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>N Dakota St</td><td>3.4%</td><td>0.2%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Missouri</td><td>34.5%</td><td>4.1%</td><td>1.3%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Miami FL</td><td>65.5%</td><td>12.7%</td><td>4.4%</td><td>0.6%</td><td>0.1%</td><td>0.0%</td></tr>
+    
+    <tr><td>Miami OH</td><td>12.0%</td><td>1.1%</td><td>0.1%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>McNeese St</td><td>10.8%</td><td>1.4%</td><td>0.1%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Idaho</td><td>0.8%</td><td>0.1%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Kennesaw</td><td>1.8%</td><td>0.1%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>LIU Brooklyn</td><td>0.4%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Iowa</td><td>46.8%</td><td>6.4%</td><td>2.1%</td><td>0.5%</td><td>0.1%</td><td>0.0%</td></tr>
+    
+    <tr><td>Hawaii</td><td>4.7%</td><td>0.6%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Clemson</td><td>53.2%</td><td>6.8%</td><td>2.3%</td><td>0.4%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Akron</td><td>10.1%</td><td>1.0%</td><td>0.1%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Furman</td><td>0.9%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Hofstra</td><td>4.9%</td><td>0.4%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Santa Clara</td><td>30.1%</td><td>3.8%</td><td>1.1%</td><td>0.1%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Northern Iowa</td><td>5.3%</td><td>0.4%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Tennessee St</td><td>1.0%</td><td>0.1%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>TCU</td><td>32.9%</td><td>1.7%</td><td>0.6%</td><td>0.2%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>South Florida</td><td>14.9%</td><td>2.0%</td><td>0.2%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>St Louis</td><td>38.7%</td><td>2.0%</td><td>0.5%</td><td>0.1%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Siena</td><td>0.4%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Penn</td><td>3.1%</td><td>0.3%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Prairie View</td><td>0.2%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Texas</td><td>21.7%</td><td>3.8%</td><td>0.6%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>UMBC</td><td>0.4%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>UCF</td><td>35.5%</td><td>6.8%</td><td>2.4%</td><td>0.2%</td><td>0.1%</td><td>0.0%</td></tr>
+    
+    <tr><td>Texas A&M</td><td>38.5%</td><td>3.9%</td><td>1.2%</td><td>0.2%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Troy</td><td>2.2%</td><td>0.1%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>VCU</td><td>24.1%</td><td>3.6%</td><td>0.4%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Wright St</td><td>1.7%</td><td>0.1%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Cal Baptist</td><td>6.8%</td><td>0.6%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+    <tr><td>Queens NC</td><td>1.2%</td><td>0.1%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+    
+  </tbody>
+</table>
+</div>
+
+
+</main>
+<footer>2026 season · generated by scripts/build_site.py</footer>
+<script src="../static/site.js"></script>
+</body>
+</html>

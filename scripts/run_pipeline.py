@@ -14,6 +14,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+import pandas as pd
+
 from march_madness.analysis import region_strength, round_advancement
 from march_madness.bracket.simulate import build_seed_to_team, compute_win_probabilities, run_monte_carlo
 from march_madness.bracket.structure import (
@@ -30,7 +32,7 @@ from march_madness.features.build_features import (
 )
 from march_madness.ingest.kaggle import load_kaggle_data
 from march_madness.ingest.kenpom import build_kenpom_history
-from march_madness.models import logistic_regression, neural_net, random_forest, xgboost_model
+from march_madness.models import logistic_regression, neural_net, random_forest, seed_clustering, seed_knn, xgboost_model
 from march_madness.models.common import prepare_model_matrix, train_and_evaluate
 
 MODEL_MODULES = {
@@ -59,7 +61,20 @@ def derive_bracket_config(season_slots) -> BracketConfig:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--model", choices=sorted(MODEL_MODULES), default="logistic_regression")
+    # Default is xgboost_model as of 2026-07-30. History: briefly tried
+    # xgboost_model on a single populated season (2026 only, 5,265 games),
+    # found via scripts/evaluate_models.py that it was worse than
+    # logistic_regression on every metric (accuracy 0.681 vs 0.745, ECE 0.145
+    # vs 0.032) and reverted to logistic_regression. Traced the real cause to
+    # training-data starvation, not model choice -- fixed with
+    # scripts/backfill_historical_kenpom.py (2003-2025 imported from the
+    # legacy project, 24 seasons / ~117K games total). Re-ran the comparison:
+    # xgboost_model accuracy 0.744 vs logistic_regression's 0.755, ECE 0.024
+    # vs 0.012 -- close enough, and judged to capture real nonlinear
+    # structure the linear model can't, that the user chose it as the live
+    # default. A real hyperparameter-tuned comparison is still open
+    # Milestone 3 work; this is "best available today," not a final verdict.
+    parser.add_argument("--model", choices=sorted(MODEL_MODULES), default="xgboost_model")
     parser.add_argument("--n-brackets", type=int, default=10_000)
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG_PATH)
     args = parser.parse_args()
@@ -68,33 +83,33 @@ def main() -> None:
     config.ensure_data_dirs()
     print(f"=== March Madness pipeline: {config.year} season ===")
 
-    print("\n[1/5] Loading Kaggle data...")
+    print("\n[1/6] Loading Kaggle data...")
     kaggle = load_kaggle_data(config.raw_dir / "kaggle")
 
-    print("[1/5] Building KenPom history from every year found under data/raw/...")
+    print("[1/6] Building KenPom history from every year found under data/raw/...")
     kenpom_history = build_kenpom_history(config.raw_dir.parent)
 
-    print("\n[2/5] Matching KenPom teams to Kaggle TeamIDs...")
+    print("\n[2/6] Matching KenPom teams to Kaggle TeamIDs...")
     matched_kenpom, unmatched = match_kenpom_teams(kenpom_history, kaggle.team_spellings)
     if len(unmatched):
         unmatched_teams = unmatched[["Team", "Season"]].drop_duplicates()
         print(f"  {len(unmatched_teams)} KenPom team-season(s) did not match MTeamSpellings.csv:")
         print(unmatched_teams.to_string(index=False))
 
-    print("[2/5] Building matchup history and training features...")
+    print("[2/6] Building matchup history and training features...")
     history = build_matchup_history(kaggle, kenpom_history)
     games = randomize_matchup_sides(history, random_state=42)
     X, y = prepare_model_matrix(games)
     print(f"  {len(X)} historical games, {X.shape[1]} features")
 
-    print(f"\n[3/5] Training {args.model}...")
+    print(f"\n[3/6] Training {args.model}...")
     model, metrics = train_and_evaluate(MODEL_MODULES[args.model].build_model(), X, y)
     print(
         f"  accuracy={metrics['accuracy']:.3f}  roc_auc={metrics['roc_auc']:.3f}  "
         f"log_loss={metrics['log_loss']:.3f}  brier={metrics['brier_score']:.3f}"
     )
 
-    print(f"\n[4/5] Simulating {args.n_brackets} brackets for {config.year}...")
+    print(f"\n[4/6] Simulating {args.n_brackets} brackets for {config.year}...")
     season_slots = kaggle.slots[kaggle.slots["Season"] == config.year]
     if season_slots.empty:
         raise SystemExit(f"No bracket slots found for season {config.year} in the Kaggle data.")
@@ -129,7 +144,7 @@ def main() -> None:
     results.to_csv(results_path, index=False)
     print(f"  wrote {results_path}")
 
-    print("\n[5/5] Summarizing results...")
+    print("\n[5/6] Summarizing results...")
     id_to_team = kaggle.teams.set_index("TeamID")["TeamName"]
     seed_by_team = {team_id: int(seed[1:3]) for seed, team_id in seed_to_team.items()}
 
@@ -150,6 +165,36 @@ def main() -> None:
     print("\nRegion championship share held by each region's #1 seed:")
     for region in sorted(region_shares.index):
         print(f"  {region}: {region_shares[region]:.1%}  ({region_champs.get(region, 0)} championships)")
+
+    # Written so scripts/build_site.py can render pages purely from data/outputs/
+    # (Seed, TeamName, etc.) without re-ingesting the raw Kaggle/KenPom data itself.
+    teams_path = config.outputs_dir / "teams.csv"
+    pd.DataFrame(
+        [
+            {"TeamID": team_id, "Seed": seed, "TeamName": id_to_team.get(team_id, str(team_id))}
+            for seed, team_id in seed_to_team.items()
+        ]
+    ).to_csv(teams_path, index=False)
+    print(f"  wrote {teams_path}")
+
+    print(f"\n[6/6] Seed prediction and team tiering for {config.year}...")
+    seed_model, seed_metrics, best_k = seed_knn.train_and_evaluate(kenpom_history)
+    print(f"  seed_knn: best_k={best_k}  accuracy={seed_metrics['accuracy']:.3f}  mean_absolute_seed_error={seed_metrics['mean_absolute_seed_error']:.2f}")
+
+    current_year_kenpom = kenpom_history[kenpom_history["Season"] == config.year]
+    X_current, y_current = seed_knn.prepare_seed_matrix(current_year_kenpom)
+    seed_predictions_path = config.outputs_dir / "seed_predictions.csv"
+    current_year_kenpom[current_year_kenpom["Seed"].notna()][["Team", "Seed"]].assign(
+        PredictedSeed=seed_model.predict(X_current)
+    ).reset_index(drop=True).to_csv(seed_predictions_path, index=False)
+    print(f"  wrote {seed_predictions_path}")
+
+    clustered = seed_clustering.cluster_teams(current_year_kenpom, n_clusters=5)
+    team_tiers_path = config.outputs_dir / "team_tiers.csv"
+    clustered[["Team", "NetRtg", "Tier"]].sort_values("NetRtg", ascending=False).to_csv(
+        team_tiers_path, index=False
+    )
+    print(f"  wrote {team_tiers_path}")
 
     print(f"\nDone. Outputs written to {config.outputs_dir}")
 

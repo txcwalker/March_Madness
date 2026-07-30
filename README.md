@@ -1,6 +1,6 @@
 # March Madness Tournament Simulator
 
-Status: rebuild in progress | 2026-07-22
+Status: rebuild in progress | 2026-07-28
 
 ## Purpose
 
@@ -33,10 +33,21 @@ Concrete standards enforced everywhere:
 - One canonical module per model/feature — notebooks are exploration-only and are never manually "ported" to `.py` again.
 - Real dependency manifest, `.gitignore`, and git history from the first commit.
 
-### Standing Priority — Year-over-Year Reuse & Post-Mortem Evaluation
-Also ongoing, not a one-time milestone: this repo needs to work the same way every March, indefinitely. Two concrete pieces:
+### Standing Priority — Year-over-Year Reuse
+Also ongoing, not a one-time milestone: this repo needs to work the same way every March, indefinitely.
 - **Multi-year data layout.** `data/{raw,processed,outputs}` are organized per-year rather than flat, so old seasons' data and results aren't overwritten and `config/season.yaml`'s `year` field is a genuine toggle, not a one-way door. This gets decided alongside `config/season.yaml` and the ingest modules (Milestone 1).
-- **Post-mortem / performance evaluation tooling.** Once a tournament concludes, compare the season's predictions against actual results to see how the model actually did (accuracy, calibration, which upsets were missed, etc.), and accumulate that across years. Design TBD — to be scoped together once there's at least one real season of predictions to evaluate against.
+
+Post-mortem/performance evaluation (comparing a season's predictions against actual results once the tournament concludes) is a concrete deliverable now, not just a standing idea — see Milestone 5.
+
+`scripts/run_pipeline.py --model` briefly defaulted to `xgboost_model` on 2026-07-30, then was reverted to `logistic_regression` the same day after `scripts/evaluate_models.py` (new — trains all four candidate models on an identical held-out split and plots a real reliability diagram to `reports/model_calibration.png`) showed xgboost_model was worse on every metric measured. Traced further before assuming it was a tuning problem: the real cause was **training-data starvation**, not model choice. `data/raw/` had only one populated season (2026, 5,265 games) against the legacy project's 23 seasons (2003-2025, ~120,000 games) — a ~23x reduction that hits high-variance learners (gradient boosting, neural nets) far harder than a regularized linear model, exactly matching the pattern observed (logistic regression and random forest barely moved; XGBoost and the neural net cratered).
+
+Fixed with a real historical backfill, not a workaround: `scripts/backfill_historical_kenpom.py` imports the legacy project's already-merged `data/kenpom_fin_df.csv` (2003-2025; 2026 deliberately excluded in favor of this repo's own fresher, independently-verified raw pull) into `data/processed/<year>/kenpom_clean.csv`, and `ingest/kenpom.py`'s `build_kenpom_history()` now also reads those for any year without a raw export of its own (raw still wins if both exist). This surfaced a second, previously-unknown variant of the Excel W-L date-mangling bug along the way: the existing fix only recovered a mangled *loss* count (`"20-12"` → `"20-Dec"`); real 2010/2012 data had mangled *win* counts too (`"2-29"` → `"Feb-29"`), silently producing `NaN` and crashing model training. Fixed by applying the recovery (renamed `parse_win_loss_component`, was `parse_losses`) to both sides, with tests.
+
+Post-backfill, on 24 seasons instead of 1: xgboost_model accuracy 0.681→0.744, expected calibration error 0.145→0.024; neural_net accuracy 0.701→0.753, ECE 0.077→**0.007** (now the best-calibrated model of the four). Logistic regression is still marginally best on every metric (0.755/0.843/0.012), close enough to xgboost_model (0.744/0.830/0.024) that the user chose `xgboost_model` as the live default anyway, judging it captures real nonlinear structure the linear model can't.
+
+**Open concern, flagged but not resolved**: with the historical backfill in place, `xgboost_model` gives Duke an even larger title share (67.5%) than the single-season version did (62.6%, the number originally called implausible), despite Duke/Arizona/Michigan having nearly identical KenPom NetRtg (38.9/37.66/37.59). A per-game calibration check (fixed-width bins, not just the 10-quantile plot) shows XGBoost is well-calibrated even in the 90-100% predicted bucket (95.7% predicted vs. 94.4% actual) — so this isn't the same "confidently wrong" problem as before. It may be a legitimate compounding effect across 6 elimination rounds, or it may mean XGBoost is weighting some other feature (SOS, conference tier, W/L record) more heavily than a linear model would in a way that isn't captured by aggregate calibration bins. Worth real scrutiny in Milestone 3, not treated as settled just because per-game calibration passed.
+
+One deliberate omission, discussed with the user: the legacy project's `TeamID_A`/`TeamID_B` features were left out of the rebuild's feature set on purpose (see `models/common.py`) — partly because they were a real identity-leakage bug in the legacy code (a row-random train/test split let the same team's ID appear on both sides, letting memorization-capable models partially "look up" a team rather than learn from its stats), which inflated legacy's old RF/XGBoost/NN numbers. The user agrees TeamID stays out for now, but flagged that college basketball's NIL/transfer-portal era (post ~2021) has made sustained program-level talent acquisition a more legitimate, less arbitrary signal than it was in the one-and-done era — worth deliberately testing a non-leaky program-identity feature in Milestone 3, not assumed away.
 
 ### Milestone 1 — Port & Modularize the Existing Product *(complete)*
 Bring what already works — data ingest, feature engineering, the five prediction models, seed prediction, seed clustering, bracket simulation, round-advancement/fragility analysis — into the new modular structure at feature parity. Nothing new yet; this is the foundation everything else builds on.
@@ -56,7 +67,25 @@ Bring what already works — data ingest, feature engineering, the five predicti
 Milestone 1 is fully built, tested, and verified end-to-end against real 2026 data — including a genuine "drop in this year's data and run one command" pipeline, not just one-off verification scripts.
 
 ### Milestone 2 — Presentation of Findings & Visualization
-Rebuild and extend the dashboard concept (`project_dashboard.html` in the old project) with better visualizations of simulation results, region strength, and bracket odds.
+`project_dashboard.html` in the old project turned out to be unrelated to March Madness — a general project-portfolio tracker that happened to be saved in that folder, not a results dashboard. This milestone is a real public-facing site instead: long-form articles (the user's own writing) plus analytics pages generated from the pipeline's output.
+
+**Presentation layer pivoted.** A first pass built this as a Python-generated static site (Jinja2 + Markdown, embedded Plotly charts, hosted on GitHub Pages). It was fully built and verified against real data, but after actually seeing it rendered, the look didn't hold up — flat and generic next to the design language already established in this user's other frontends. Nothing from it was ever committed, so this was a clean pivot, not a revert. Superseded, not deleted: the whole Jinja2 build (`content/`, `site/`, `docs/`, `scripts/build_site.py`) now lives in `legacy/jinja_site/` pending eventual deletion; `jinja2`/`markdown` are dropped from `pyproject.toml`. GitHub Pages was discussed as a hosting target for that build but never actually enabled — there's nothing live to remove.
+
+Current direction: a **Vite + React** frontend, adopting the glassmorphism system already used in `../NFL_Exploration/frontend` and `../CaravanserAI/frontend` (dark background, blurred translucent cards via `backdrop-filter`, gradient "glow" headings, blue/orange accent colors, hand-written CSS custom properties — explicitly not Tailwind or a component library). Several alternate visual styles were prototyped for comparison (neo-brutalist, Material 3, minimal editorial, bento grid, plus a few sports-specific looks); the user picked **Minimal Editorial**, designed properly in both light and dark themes rather than dropping the light/dark toggle. Hosting: local only for now, matching `NFL_Exploration`/`CaravanserAI` — neither of those is deployed publicly yet, so there's no established pattern to match beyond that.
+
+- [x] `content/articles/*.md`, `site/templates/`, `site/static/`, `scripts/build_site.py` — the superseded Jinja2 build, now in `legacy/jinja_site/`.
+- [x] `run_pipeline.py` extended to also write `teams.csv`, `seed_predictions.csv`, `team_tiers.csv` — still valid and needed regardless of frontend choice.
+- [x] Site architecture decision: Vite + React + glassmorphism-derived design system.
+- [x] Visual design direction: Minimal Editorial, both light and dark themes.
+- [x] `frontend/` scaffold (Vite + React, port 5181 — see `../LOCALHOST_PORT_REGISTRY.md` — mirroring `NFL_Exploration/frontend`'s no-router, `pagesConfig.js`-driven page-switching pattern).
+- [x] `scripts/export_site_data.py` — the CSV → frontend data hand-off, decided as a JSON export (not the frontend parsing CSV). Reruns `simulation_results.csv` back through `analysis/round_advancement.py` and `analysis/region_strength.py`, the same "stays fast, decoupled from `run_pipeline.py`'s runtime" role the superseded `build_site.py` played, and writes `frontend/public/data/{<year>.json, current.json}`.
+- [x] Home page (executive summary: stat strip, region outlook, Final Four + championship-odds teasers) and Round Odds page (all teams, every round, click-to-sort columns) — verified end-to-end against real 2026 output in the running dev server, zero console errors.
+- [x] Over/Underperformers (sortable table + a diverging bar chart of the biggest over/underperformers), Cinderella Watch (seed-threshold x round heatmap), Final Four Finder (rebuilt around four region dropdowns for a partial-or-full team selection, with a bar chart + list of matching Final Fours — `export_site_data.py` now exports the full ~266-combo list instead of a top-N slice, so any selection is answered honestly, including "never occurred"), and Region Strength (championship-share bar chart + a "fragile → competitive" table). All verified in the running dev server against real 2026 data, zero console errors.
+- [x] **Region Strength audit finding, fixed**: the original top-heaviness stat conditioned on the region winning the whole national title, which conflated a region's own competitiveness with cross-region championship-game strength and was statistically unstable for any region that rarely won it all (one region's figure was computed from ~120 of 10,000 brackets). Added `region_top_seed_final_four_share()` (unconditional, all 10,000 brackets) as the primary fragility metric; the old conditional stat is kept as a secondary figure, not deleted. See `src/march_madness/analysis/region_strength.py` docstrings and `tests/test_analysis.py`.
+- [x] Fixed a real bug surfaced by the model switch: a team that never wins a single simulated game (e.g. Furman, Prairie View, under `xgboost_model`'s more confident predictions) was silently dropped from the entire site export instead of showing at ~0% — the same class of bug `average_wins_by_team()` already guards against in `analysis/round_advancement.py`. `export_site_data.py`'s team payload now anchors on the full `teams.csv`, not on whichever teams happened to win at least one game.
+- [ ] Seed Prediction — deliberately deferred, not a blocked-on-a-bug item anymore: the user has learned more about clustering since the original design and wants to redo this page properly rather than ship the old approach. Target: done before the 2027 season publish, not this pass.
+
+"Who benefits most if team X loses" and the post-mortem/evaluation page have moved to Milestone 5 (below), alongside two related new tools.
 
 ### Milestone 3 — Seed Prediction
 Deepen seed prediction beyond the old KNN baseline, building on the unsupervised clustering approach already prototyped in `seed_clustering.py`.
@@ -64,10 +93,17 @@ Deepen seed prediction beyond the old KNN baseline, building on the unsupervised
 ### Milestone 4 — Upset Finder & Cinderella Stories
 New analysis surface: surface likely upsets and long-shot deep-run candidates from model/seed disagreement. The old project's round-advancement "fragility" analysis in `sims_mens.py` is a starting point.
 
-### Milestone 5 — Sportsbook & Prediction Market Integration
+### Milestone 5 — Bracket Path & Historical Tools *(new)*
+Four items, agreed as distinct tools rather than variations on one idea:
+- **Path of Least Resistance** — which team has the weakest projected path to the Final Four, based on the strength of the opponents standing between them and it.
+- **Who Benefits if Team X Loses** — the flip side of the same bracket-path question: given a specific team losing, which other teams gain the most. Moved here from Milestone 2, where it was originally parked as "needs new analysis, not just a page."
+- **Post-Mortem / Year Retrospective** — compare a concluded season's predictions against actual results (accuracy, calibration, biggest misses). Also moved here from Milestone 2/the Year-over-Year Reuse standing priority; design still TBD with the user, now that there's a real season of predictions to eventually evaluate against.
+- **Previous-Years History** — a side-by-side view across seasons, building on the per-year `data/{raw,processed,outputs}` layout already in place from Milestone 1.
+
+### Milestone 6 — Sportsbook & Prediction Market Integration
 Compare model output against betting lines and prediction markets via API. (This was already on the original project's "future work" list.)
 
-### Milestone 6 — In-Season Predictive Modeling *(future, ~2 years out)*
+### Milestone 7 — In-Season Predictive Modeling *(future, ~2 years out)*
 A preseason model is inherently weak — no in-season data to project from. Longer-term direction: predict not just tournament bracket outcomes but bubble-team at-large selection (who makes/misses the tournament) using accumulating in-season data. Explicitly a multi-year-out stretch goal, not near-term.
 
 ### Future: Women's Tournament & Format Changes
@@ -77,4 +113,4 @@ Tracked as standing constraints on the design (see Goals below), not scheduled m
 
 ## Plan of Attack
 
-Docs backbone (done) → repo skeleton + dependency manifest → config module → KenPom ingest automation → feature/model porting → bracket simulation → seed clustering/analysis porting (completes Milestone 1) → presentation layer (Milestone 2) → seed prediction depth (Milestone 3) → upset/Cinderella analysis (Milestone 4) → sportsbook/market APIs (Milestone 5) → in-season modeling (Milestone 6, future). Each step is pulled deliberately from the old project (`../March_Madness_2026`), not copied wholesale.
+Docs backbone (done) → repo skeleton + dependency manifest → config module → KenPom ingest automation → feature/model porting → bracket simulation → seed clustering/analysis porting (completes Milestone 1) → presentation layer, now Vite + React + Minimal Editorial after the Jinja2 pivot (Milestone 2) → seed prediction depth (Milestone 3) → upset/Cinderella analysis (Milestone 4) → bracket path & historical tools (Milestone 5, new) → sportsbook/market APIs (Milestone 6) → in-season modeling (Milestone 7, future). Each step is pulled deliberately from the old project (`../March_Madness_2026`), not copied wholesale.

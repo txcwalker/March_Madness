@@ -1,0 +1,178 @@
+/* Palette: validated default instance (see dataviz skill references/palette.md).
+   Light/dark both selected -- the media query covers OS preference, the
+   data-theme scope covers the viewer's explicit toggle, which wins either way. */
+:root {
+  color-scheme: light;
+  --surface-1: #fcfcfb;
+  --page: #f9f9f7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --gridline: #e1e0d9;
+  --baseline: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+
+  --series-1: #2a78d6; /* blue */
+  --series-2: #eb6834; /* orange */
+  --series-3: #1baf7a; /* aqua */
+  --series-4: #eda100; /* yellow */
+  --series-5: #e87ba4; /* magenta */
+  --series-6: #008300; /* green */
+  --series-7: #4a3aa7; /* violet */
+  --series-8: #e34948; /* red */
+
+  --diverging-pos: #2a78d6; /* blue: overperform */
+  --diverging-neg: #e34948; /* red: underperform */
+  --diverging-mid: #f0efec;
+
+  --seq-100: #cde2fb; --seq-300: #6da7ec; --seq-500: #256abf; --seq-700: #0d366b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --page: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --gridline: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+    --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
+    --diverging-pos: #3987e5; --diverging-neg: #e66767; --diverging-mid: #383835;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1: #1a1a19;
+  --page: #0d0d0d;
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #898781;
+  --gridline: #2c2c2a;
+  --baseline: #383835;
+  --border: rgba(255, 255, 255, 0.10);
+
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+  --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
+  --diverging-pos: #3987e5; --diverging-neg: #e66767; --diverging-mid: #383835;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--page);
+  color: var(--text-primary);
+  line-height: 1.55;
+}
+
+a { color: var(--series-1); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* --- Nav --- */
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-1);
+  flex-wrap: wrap;
+}
+.site-nav .brand { font-weight: 700; font-size: 1.05rem; color: var(--text-primary); }
+.site-nav a { color: var(--text-secondary); font-size: 0.92rem; }
+.site-nav a:hover { color: var(--text-primary); text-decoration: none; }
+.site-nav .spacer { flex: 1; }
+.theme-toggle {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* --- Layout --- */
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+main.narrow { max-width: 680px; }
+
+h1 { font-size: 1.8rem; margin: 0 0 0.4rem; }
+h2 { font-size: 1.25rem; margin: 2rem 0 0.8rem; }
+.subtitle { color: var(--text-secondary); margin: 0 0 1.5rem; }
+.placeholder-note {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--series-4);
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+/* --- Article list / cards --- */
+.article-list { list-style: none; padding: 0; margin: 0; }
+.article-list li { padding: 1rem 0; border-bottom: 1px solid var(--gridline); }
+.article-list h3 { margin: 0 0 0.25rem; font-size: 1.1rem; }
+.article-list .meta { color: var(--text-muted); font-size: 0.85rem; }
+.article-list .summary { color: var(--text-secondary); margin: 0.35rem 0 0; }
+
+.nav-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.9rem; margin: 1.5rem 0; }
+.nav-card {
+  display: block;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  color: var(--text-primary);
+}
+.nav-card:hover { border-color: var(--series-1); text-decoration: none; }
+.nav-card .card-title { font-weight: 600; margin-bottom: 0.25rem; }
+.nav-card .card-desc { color: var(--text-secondary); font-size: 0.87rem; }
+
+/* --- Article body --- */
+.article-body { font-size: 1.02rem; }
+.article-body h2 { font-size: 1.3rem; }
+.article-body p { margin: 1em 0; }
+.article-meta { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 2rem; }
+
+/* --- Tables --- */
+.data-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+table.data-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; background: var(--surface-1); }
+table.data-table th, table.data-table td {
+  padding: 0.55rem 0.8rem;
+  text-align: right;
+  border-bottom: 1px solid var(--gridline);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+table.data-table th:first-child, table.data-table td:first-child { text-align: left; white-space: normal; }
+table.data-table th {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  user-select: none;
+  position: sticky;
+  top: 0;
+  background: var(--surface-1);
+}
+table.data-table th:hover { color: var(--text-primary); }
+table.data-table tbody tr:hover { background: color-mix(in srgb, var(--series-1) 6%, transparent); }
+
+.chart-container { margin: 1.5rem 0; }
+
+footer {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  padding: 2rem 1.5rem;
+}

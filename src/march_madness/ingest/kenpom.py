@@ -25,18 +25,25 @@ _DUPLICATE_STAT_RENAME_SCHEDULE: dict[str, list[str]] = {
     "DRtg": ["DRtg", "SOS_DRtg"],
 }
 
-# Excel silently reformats a "W-L" value like "20-12" into a date ("20-Dec")
-# whenever the loss count looks like a month number (1-12) -- a real
-# corruption confirmed in the raw export (~90 teams/year), not a hypothetical.
-_MONTH_ABBREVIATION_TO_LOSSES = {
+# Excel silently reformats a "W-L" value into a date whenever either side
+# looks like a month number (1-12) -- confirmed in real data in BOTH
+# directions, not just one: "20-12" (losses=12 look like a month) becomes
+# "20-Dec", but "2-29" (wins=2 look like a month) becomes "Feb-29" -- found
+# in the 2010/2012 historical KenPom data pulled in by
+# backfill_historical_kenpom.py (Alcorn St. 2010, Binghamton 2012), which
+# the original one-season fix never had a chance to hit since it happened
+# to only ever see the losses-side version in the 2026 raw export
+# (~90 teams/year there). Recovering the month on whichever side got
+# mangled requires trying it on both W and L, not just L.
+_MONTH_ABBREVIATION_TO_NUMBER = {
     "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
     "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12,
 }
 
 
-def _parse_losses(value: str) -> float:
-    """Recovers the real loss count when Excel has date-mangled it into a month abbreviation."""
-    month = _MONTH_ABBREVIATION_TO_LOSSES.get(value)
+def parse_win_loss_component(value: str) -> float:
+    """Recovers the real win or loss count when Excel has date-mangled it into a month abbreviation."""
+    month = _MONTH_ABBREVIATION_TO_NUMBER.get(value)
     if month is not None:
         return float(month)
     return pd.to_numeric(value, errors="coerce")
@@ -92,8 +99,8 @@ def clean_kenpom_export(raw: pd.DataFrame, season: int) -> pd.DataFrame:
     df["Seed"] = pd.to_numeric(extracted[1], errors="coerce")
 
     wins_losses = df["W-L"].str.split("-", expand=True)
-    df["W"] = pd.to_numeric(wins_losses[0], errors="coerce")
-    df["L"] = wins_losses[1].apply(_parse_losses)
+    df["W"] = wins_losses[0].apply(parse_win_loss_component)
+    df["L"] = wins_losses[1].apply(parse_win_loss_component)
     df = df.drop(columns=["W-L", "Rk"])
 
     df["Season"] = season
@@ -105,21 +112,48 @@ def build_kenpom_history(raw_root: Path | str) -> pd.DataFrame:
     """
     Inputs: the repo's data/raw directory, containing one subfolder per
             season (e.g. data/raw/2026/kenpom_raw.csv).
-    Outputs: every available season's raw export, cleaned and concatenated
-             into one DataFrame, sorted by Season.
+    Outputs: every available season's data -- raw exports cleaned via
+             clean_kenpom_export(), plus any already-cleaned historical
+             seasons (see below) -- concatenated into one DataFrame, sorted
+             by Season.
     Purpose: replaces re-pasting the full multi-year history by hand each
              season -- every past year's raw export stays on disk under its
              own year folder, so this merged history is always regenerable
              from scratch.
+
+             Also picks up data/processed/<year>/kenpom_clean.csv for any
+             year that has one but no raw export under data/raw/<year>/ --
+             this is how scripts/backfill_historical_kenpom.py's import of
+             seasons predating this project (2003-2025, sourced from a
+             prior implementation that no longer has the original raw
+             KenPom pastes on disk, only an already-cleaned merge) gets
+             included, in the same clean_kenpom_export() output shape,
+             without needing to fabricate a fake "raw" file just to run it
+             back through cleaning a second time. A year with both a raw
+             export and a processed import prefers the raw one -- it's the
+             directly-verified source.
     """
     raw_root = Path(raw_root)
-    cleaned_seasons = [
-        clean_kenpom_export(read_kenpom_csv(export_path), season=int(export_path.parent.name))
-        for export_path in sorted(raw_root.glob("*/kenpom_raw.csv"))
-    ]
+    raw_years: set[int] = set()
+    cleaned_seasons = []
+    for export_path in sorted(raw_root.glob("*/kenpom_raw.csv")):
+        year = int(export_path.parent.name)
+        raw_years.add(year)
+        cleaned_seasons.append(clean_kenpom_export(read_kenpom_csv(export_path), season=year))
+
+    processed_root = raw_root.parent / "processed"
+    if processed_root.exists():
+        for clean_path in sorted(processed_root.glob("*/kenpom_clean.csv")):
+            year = int(clean_path.parent.name)
+            if year in raw_years:
+                continue
+            cleaned_seasons.append(pd.read_csv(clean_path))
 
     if not cleaned_seasons:
-        raise FileNotFoundError(f"No kenpom_raw.csv found under any year folder in {raw_root}")
+        raise FileNotFoundError(
+            f"No kenpom_raw.csv under any year folder in {raw_root}, "
+            f"and no kenpom_clean.csv under {processed_root} either"
+        )
 
     return (
         pd.concat(cleaned_seasons, ignore_index=True)

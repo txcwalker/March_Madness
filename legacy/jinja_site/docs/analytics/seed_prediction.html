@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seed Prediction · March Madness Analytics</title>
+<link rel="stylesheet" href="../static/style.css">
+</head>
+<body>
+<nav class="site-nav">
+  <a class="brand" href="../index.html">March Madness Analytics</a>
+  <a href="../index.html">Articles</a>
+  <a href="../analytics/round_odds.html">Round Odds</a>
+  <a href="../analytics/over_underperformers.html">Over/Underperformers</a>
+  <a href="../analytics/cinderella.html">Cinderella Watch</a>
+  <a href="../analytics/final_four_finder.html">Final Four Finder</a>
+  <a href="../analytics/region_strength.html">Region Strength</a>
+  <a href="../analytics/seed_prediction.html">Seed Prediction</a>
+  <span class="spacer"></span>
+  <button class="theme-toggle" type="button">Toggle theme</button>
+</nav>
+<main class="">
+
+<h1>Seed Prediction</h1>
+<p class="subtitle">What seed the model would have assigned based on KenPom stats alone, versus the committee's actual seed.</p>
+<div class="placeholder-note">Early feature, genuinely data-starved right now -- this repo only has one real season of labeled tournament seeds to learn from (~4 examples per seed line). Accuracy will improve automatically as more years of KenPom history accumulate. See the project roadmap.</div>
+
+
+
+<div class="chart-container"><div style="height:500px; width:100%;">                        <script>window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.7.0.min.js" integrity="sha256-jvTGqxNp8AGWEcvNLVuKr+8j5dGe9Yw51LQkmDH+IYA=" crossorigin="anonymous"></script>                <div id="46e3679b-c6a0-4e2d-bf93-cbc09e877f98" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script>                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("46e3679b-c6a0-4e2d-bf93-cbc09e877f98")) {                    Plotly.newPlot(                        "46e3679b-c6a0-4e2d-bf93-cbc09e877f98",                        [{"hovertemplate":"%{text}\u003cbr\u003eActual seed: %{x}\u003cbr\u003ePredicted seed: %{y}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#2a78d6","size":9},"mode":"markers","text":["Florida","Tennessee","Villanova","Illinois","Iowa","Wisconsin","Missouri","Vanderbilt","VCU","Connecticut","Kennesaw St.","Arkansas","Virginia","Nebraska","Houston","Michigan","South Florida","Iowa St.","Arizona","Purdue","Saint Louis","SMU","Clemson","Texas A&M","Santa Clara","N.C. State","Akron","Texas","UCF","Northern Iowa","McNeese","Miami OH","High Point","TCU","Michigan St.","Gonzaga","Cal Baptist","Hawaii","Hofstra","North Dakota St.","Penn","Idaho","Wright St.","Troy","Tennessee St.","UMBC","Queens","Howard","LIU","Prairie View A&M","Siena","Furman","Georgia","Lehigh","North Carolina","Miami FL","Kentucky","UCLA","Ohio St.","Utah St.","Saint Mary's","BYU","Kansas","Texas Tech","Louisville","Alabama","St. John's","Duke"],"x":{"dtype":"f8","bdata":"AAAAAAAA8D8AAAAAAAAYQAAAAAAAACBAAAAAAAAACEAAAAAAAAAiQAAAAAAAABRAAAAAAAAAJEAAAAAAAAAUQAAAAAAAACZAAAAAAAAAAEAAAAAAAAAsQAAAAAAAABBAAAAAAAAACEAAAAAAAAAQQAAAAAAAAABAAAAAAAAA8D8AAAAAAAAmQAAAAAAAAABAAAAAAAAA8D8AAAAAAAAAQAAAAAAAACJAAAAAAAAAJkAAAAAAAAAgQAAAAAAAACRAAAAAAAAAJEAAAAAAAAAmQAAAAAAAAChAAAAAAAAAJkAAAAAAAAAkQAAAAAAAAChAAAAAAAAAKEAAAAAAAAAmQAAAAAAAAChAAAAAAAAAIkAAAAAAAAAIQAAAAAAAAAhAAAAAAAAAKkAAAAAAAAAqQAAAAAAAACpAAAAAAAAALEAAAAAAAAAsQAAAAAAAAC5AAAAAAAAALEAAAAAAAAAqQAAAAAAAAC5AAAAAAAAAMEAAAAAAAAAuQAAAAAAAADBAAAAAAAAAMEAAAAAAAAAwQAAAAAAAADBAAAAAAAAALkAAAAAAAAAgQAAAAAAAADBAAAAAAAAAGEAAAAAAAAAcQAAAAAAAABxAAAAAAAAAHEAAAAAAAAAgQAAAAAAAACJAAAAAAAAAHEAAAAAAAAAYQAAAAAAAABBAAAAAAAAAFEAAAAAAAAAYQAAAAAAAABBAAAAAAAAAFEAAAAAAAADwPw=="},"y":{"dtype":"i1","bdata":"BggGAggGCQQKAQ8EAwQCAQsCAQIJCwgKCgsMCwoMDAsMCQMDDQ0NDg4PDg0PEA8QEBAQDwgQBgcHBwgJBwYEBQYEBQE="},"type":"scatter"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"shapes":[{"line":{"color":"#898781","dash":"dot"},"type":"line","x0":1,"x1":16,"y0":1,"y1":16}],"title":{"text":"Predicted seed vs. actual seed"},"xaxis":{"title":{"text":"Actual seed"}},"yaxis":{"title":{"text":"Predicted seed (KNN, KenPom stats only)"}},"height":500,"font":{"family":"system-ui, -apple-system, 'Segoe UI', sans-serif"},"margin":{"l":10,"r":10,"t":40,"b":10},"paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)"},                        {"displayModeBar": false, "responsive": true}                    )                };            </script>        </div></div>
+
+
+
+<h2>Biggest predicted-vs-actual gaps first</h2>
+<div class="data-table-wrap">
+<table class="data-table">
+  <thead><tr><th>Team</th><th>Actual Seed</th><th>Predicted Seed</th><th>Difference</th></tr></thead>
+  <tbody>
+    
+    <tr><td>Florida</td><td>1</td><td>6</td><td>+5</td></tr>
+    
+    <tr><td>Tennessee</td><td>6</td><td>8</td><td>+2</td></tr>
+    
+    <tr><td>Villanova</td><td>8</td><td>6</td><td>-2</td></tr>
+    
+    <tr><td>Illinois</td><td>3</td><td>2</td><td>-1</td></tr>
+    
+    <tr><td>Iowa</td><td>9</td><td>8</td><td>-1</td></tr>
+    
+    <tr><td>Wisconsin</td><td>5</td><td>6</td><td>+1</td></tr>
+    
+    <tr><td>Missouri</td><td>10</td><td>9</td><td>-1</td></tr>
+    
+    <tr><td>Vanderbilt</td><td>5</td><td>4</td><td>-1</td></tr>
+    
+    <tr><td>VCU</td><td>11</td><td>10</td><td>-1</td></tr>
+    
+    <tr><td>Connecticut</td><td>2</td><td>1</td><td>-1</td></tr>
+    
+    <tr><td>Kennesaw St.</td><td>14</td><td>15</td><td>+1</td></tr>
+    
+    <tr><td>Arkansas</td><td>4</td><td>4</td><td>+0</td></tr>
+    
+    <tr><td>Virginia</td><td>3</td><td>3</td><td>+0</td></tr>
+    
+    <tr><td>Nebraska</td><td>4</td><td>4</td><td>+0</td></tr>
+    
+    <tr><td>Houston</td><td>2</td><td>2</td><td>+0</td></tr>
+    
+    <tr><td>Michigan</td><td>1</td><td>1</td><td>+0</td></tr>
+    
+    <tr><td>South Florida</td><td>11</td><td>11</td><td>+0</td></tr>
+    
+    <tr><td>Iowa St.</td><td>2</td><td>2</td><td>+0</td></tr>
+    
+    <tr><td>Arizona</td><td>1</td><td>1</td><td>+0</td></tr>
+    
+    <tr><td>Purdue</td><td>2</td><td>2</td><td>+0</td></tr>
+    
+    <tr><td>Saint Louis</td><td>9</td><td>9</td><td>+0</td></tr>
+    
+    <tr><td>SMU</td><td>11</td><td>11</td><td>+0</td></tr>
+    
+    <tr><td>Clemson</td><td>8</td><td>8</td><td>+0</td></tr>
+    
+    <tr><td>Texas A&M</td><td>10</td><td>10</td><td>+0</td></tr>
+    
+    <tr><td>Santa Clara</td><td>10</td><td>10</td><td>+0</td></tr>
+    
+    <tr><td>N.C. State</td><td>11</td><td>11</td><td>+0</td></tr>
+    
+    <tr><td>Akron</td><td>12</td><td>12</td><td>+0</td></tr>
+    
+    <tr><td>Texas</td><td>11</td><td>11</td><td>+0</td></tr>
+    
+    <tr><td>UCF</td><td>10</td><td>10</td><td>+0</td></tr>
+    
+    <tr><td>Northern Iowa</td><td>12</td><td>12</td><td>+0</td></tr>
+    
+    <tr><td>McNeese</td><td>12</td><td>12</td><td>+0</td></tr>
+    
+    <tr><td>Miami OH</td><td>11</td><td>11</td><td>+0</td></tr>
+    
+    <tr><td>High Point</td><td>12</td><td>12</td><td>+0</td></tr>
+    
+    <tr><td>TCU</td><td>9</td><td>9</td><td>+0</td></tr>
+    
+    <tr><td>Michigan St.</td><td>3</td><td>3</td><td>+0</td></tr>
+    
+    <tr><td>Gonzaga</td><td>3</td><td>3</td><td>+0</td></tr>
+    
+    <tr><td>Cal Baptist</td><td>13</td><td>13</td><td>+0</td></tr>
+    
+    <tr><td>Hawaii</td><td>13</td><td>13</td><td>+0</td></tr>
+    
+    <tr><td>Hofstra</td><td>13</td><td>13</td><td>+0</td></tr>
+    
+    <tr><td>North Dakota St.</td><td>14</td><td>14</td><td>+0</td></tr>
+    
+    <tr><td>Penn</td><td>14</td><td>14</td><td>+0</td></tr>
+    
+    <tr><td>Idaho</td><td>15</td><td>15</td><td>+0</td></tr>
+    
+    <tr><td>Wright St.</td><td>14</td><td>14</td><td>+0</td></tr>
+    
+    <tr><td>Troy</td><td>13</td><td>13</td><td>+0</td></tr>
+    
+    <tr><td>Tennessee St.</td><td>15</td><td>15</td><td>+0</td></tr>
+    
+    <tr><td>UMBC</td><td>16</td><td>16</td><td>+0</td></tr>
+    
+    <tr><td>Queens</td><td>15</td><td>15</td><td>+0</td></tr>
+    
+    <tr><td>Howard</td><td>16</td><td>16</td><td>+0</td></tr>
+    
+    <tr><td>LIU</td><td>16</td><td>16</td><td>+0</td></tr>
+    
+    <tr><td>Prairie View A&M</td><td>16</td><td>16</td><td>+0</td></tr>
+    
+    <tr><td>Siena</td><td>16</td><td>16</td><td>+0</td></tr>
+    
+    <tr><td>Furman</td><td>15</td><td>15</td><td>+0</td></tr>
+    
+    <tr><td>Georgia</td><td>8</td><td>8</td><td>+0</td></tr>
+    
+    <tr><td>Lehigh</td><td>16</td><td>16</td><td>+0</td></tr>
+    
+    <tr><td>North Carolina</td><td>6</td><td>6</td><td>+0</td></tr>
+    
+    <tr><td>Miami FL</td><td>7</td><td>7</td><td>+0</td></tr>
+    
+    <tr><td>Kentucky</td><td>7</td><td>7</td><td>+0</td></tr>
+    
+    <tr><td>UCLA</td><td>7</td><td>7</td><td>+0</td></tr>
+    
+    <tr><td>Ohio St.</td><td>8</td><td>8</td><td>+0</td></tr>
+    
+    <tr><td>Utah St.</td><td>9</td><td>9</td><td>+0</td></tr>
+    
+    <tr><td>Saint Mary's</td><td>7</td><td>7</td><td>+0</td></tr>
+    
+    <tr><td>BYU</td><td>6</td><td>6</td><td>+0</td></tr>
+    
+    <tr><td>Kansas</td><td>4</td><td>4</td><td>+0</td></tr>
+    
+    <tr><td>Texas Tech</td><td>5</td><td>5</td><td>+0</td></tr>
+    
+    <tr><td>Louisville</td><td>6</td><td>6</td><td>+0</td></tr>
+    
+    <tr><td>Alabama</td><td>4</td><td>4</td><td>+0</td></tr>
+    
+    <tr><td>St. John's</td><td>5</td><td>5</td><td>+0</td></tr>
+    
+    <tr><td>Duke</td><td>1</td><td>1</td><td>+0</td></tr>
+    
+  </tbody>
+</table>
+</div>
+
+
+</main>
+<footer>2026 season · generated by scripts/build_site.py</footer>
+<script src="../static/site.js"></script>
+</body>
+</html>

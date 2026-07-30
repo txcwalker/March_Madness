@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block main_class %}narrow{% endblock %}
+{% block content %}
+<h1>{{ site_name }}</h1>
+<p class="subtitle">{{ tagline }}</p>
+
+<div class="nav-cards">
+  <a class="nav-card" href="{{ root }}analytics/round_odds.html">
+    <div class="card-title">Round Odds</div>
+    <div class="card-desc">Every team's odds of reaching each round, from {{ n_brackets }} simulated brackets.</div>
+  </a>
+  <a class="nav-card" href="{{ root }}analytics/over_underperformers.html">
+    <div class="card-title">Over/Underperformers</div>
+    <div class="card-desc">Which teams are projected to beat or miss their seed's historical average.</div>
+  </a>
+  <a class="nav-card" href="{{ root }}analytics/cinderella.html">
+    <div class="card-title">Cinderella Watch</div>
+    <div class="card-desc">Odds a double-digit (or worse) seed makes a deep run, by round.</div>
+  </a>
+  <a class="nav-card" href="{{ root }}analytics/final_four_finder.html">
+    <div class="card-title">Final Four Finder</div>
+    <div class="card-desc">The most common Final Four combinations across every simulated bracket.</div>
+  </a>
+  <a class="nav-card" href="{{ root }}analytics/region_strength.html">
+    <div class="card-title">Region Strength</div>
+    <div class="card-desc">How top-heavy each region is &mdash; early feature, still being deepened.</div>
+  </a>
+  <a class="nav-card" href="{{ root }}analytics/seed_prediction.html">
+    <div class="card-title">Seed Prediction</div>
+    <div class="card-desc">Model-predicted seed vs. actual, from KenPom stats alone &mdash; early feature.</div>
+  </a>
+</div>
+
+<h2>Articles</h2>
+{% if articles %}
+<ul class="article-list">
+  {% for article in articles %}
+  <li>
+    <h3><a href="{{ root }}articles/{{ article.slug }}.html">{{ article.title }}</a></h3>
+    <div class="meta">{{ article.date }}</div>
+    {% if article.summary %}<p class="summary">{{ article.summary }}</p>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="subtitle">No articles published yet.</p>
+{% endif %}
+{% endblock %}
