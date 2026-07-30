@@ -69,6 +69,39 @@ def test_compute_win_probabilities_favors_higher_net_rtg():
     assert probs[103][101] == 1.0  # 103 (NetRtg=3) beats 101
 
 
+class AlwaysSlotAWinsModel:
+    """
+    Fake classifier with a real, confirmed-in-production failure mode: it
+    ignores the teams' actual stats and just favors whichever team's stats
+    happen to be in the "_A" feature slot. A real fitted model isn't
+    literally this extreme, but a real audit (2026-07-30) found
+    xgboost_model has a meaningful version of exactly this bias -- the same
+    matchup came back 64%/38% one way and ~38%/62% the other, for two teams
+    with nearly identical ratings.
+    """
+
+    def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
+        slot_a_wins = np.full(len(X), 0.9)
+        return np.column_stack([1 - slot_a_wins, slot_a_wins])
+
+
+def test_compute_win_probabilities_symmetrizes_away_a_slot_position_bias():
+    team_stats = make_team_stats([101, 102])
+    model = AlwaysSlotAWinsModel()
+
+    probs = compute_win_probabilities(model, team_stats, [101, 102])
+
+    # The raw model says whoever's in slot A wins 90% of the time regardless
+    # of team -- so an un-symmetrized result would show BOTH probs[101][102]
+    # and probs[102][101] near 0.9, which is incoherent (they must sum to 1
+    # for the same real-world matchup). Symmetrizing must produce a
+    # coin-flip here, since the fake model carries zero real signal about
+    # which team is actually better -- only which slot they happened to land in.
+    assert probs[101][102] == pytest.approx(0.5)
+    assert probs[102][101] == pytest.approx(0.5)
+    assert probs[101][102] + probs[102][101] == pytest.approx(1.0)
+
+
 def test_simulate_bracket_deterministic_always_picks_the_favorite():
     slots = make_small_bracket()
     seed_to_team = {"seed1": 101, "seed2": 102, "seed3": 103, "seed4": 104}

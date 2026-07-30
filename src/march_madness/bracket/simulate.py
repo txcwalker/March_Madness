@@ -33,19 +33,44 @@ def compute_win_probabilities(
     Inputs: a fitted win-probability classifier, per-team stats indexed by
             TeamID, and every TeamID that could appear in the bracket.
     Outputs: probs[team1][team2] = P(team1 beats team2), for every ordered
-             pair of distinct teams.
+             pair of distinct teams. Symmetrized: probs[a][b] + probs[b][a]
+             is always exactly 1.0.
     Purpose: precomputes every matchup once, up front -- this is what makes
              running thousands of bracket simulations fast, rather than
              calling the model mid-simulation for every single game of
              every bracket.
+
+             Symmetrizing matters because predict_proba is NOT guaranteed
+             slot-invariant -- a real audit (2026-07-30, prompted by an
+             implausibly large championship share for one team) found
+             xgboost_model gives meaningfully different answers for the
+             exact same matchup depending on which team's stats land in the
+             "_A" feature slot vs "_B" (e.g. two teams with nearly identical
+             KenPom ratings came back 64%/38% one way, ~38%/62% the other --
+             should be close to a coin flip either way). `simulate_bracket`
+             always resolves a slot's StrongSeed as "team1"/the "_A" side,
+             so an un-symmetrized model bias would give whichever team's
+             bracket position happens to be labeled StrongSeed a
+             compounding, unearned edge every single round, regardless of
+             real team strength. Averaging the forward prediction against
+             the complementary probability implied by the reverse-slot
+             prediction cancels that artifact out; a genuinely
+             slot-invariant model (logistic_regression looked close to one
+             in this audit) is unaffected by this change.
     """
     pairs = generate_matchup_pairs(team_ids)
     X = build_prediction_matrix(team_stats, pairs)
     win_prob_team1 = model.predict_proba(X)[:, 1]
 
-    probs: dict[int, dict[int, float]] = {}
+    raw: dict[int, dict[int, float]] = {}
     for (team1, team2), p in zip(pairs, win_prob_team1):
-        probs.setdefault(team1, {})[team2] = float(p)
+        raw.setdefault(team1, {})[team2] = float(p)
+
+    probs: dict[int, dict[int, float]] = {}
+    for team1, opponents in raw.items():
+        for team2, p_forward in opponents.items():
+            p_backward = raw[team2][team1]
+            probs.setdefault(team1, {})[team2] = (p_forward + (1 - p_backward)) / 2
     return probs
 
 
