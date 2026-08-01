@@ -126,3 +126,157 @@ def final_four_combination_counts(results: pd.DataFrame, round_code: str = "R4")
     round_games = results[results["Slot"].map(round_of) == round_code]
     combos = round_games.groupby("Bracket")["TeamID"].apply(lambda teams: tuple(sorted(teams)))
     return combos.value_counts()
+
+
+def benefit_if_team_loses(
+    results: pd.DataFrame,
+    team_ids: list[int],
+    team_to_region: dict[int, str],
+    elimination_round_code: str = "R4",
+    champion_slot: str = "R6CH",
+) -> pd.DataFrame:
+    """
+    Inputs: simulation results, every team's TeamID, a TeamID -> region
+            mapping (see analysis/region_strength.py's region_of_seed()),
+            the round code marking "reaching the Final Four" (default "R4"
+            -- a team that wins this round's game is the one that made
+            it), and the champion slot code (default "R6CH").
+    Outputs: one row per (TeamX, TeamY) pair with TeamY's baseline
+             (unconditional, full-sample) championship AND Final Four
+             odds, the same two odds conditioned on TeamX NOT reaching the
+             Final Four, and a Benefit (conditioned minus baseline) for
+             both. Championship odds are conditioned this way for every
+             TeamY regardless of region; Final Four odds are conditioned
+             this way only for TeamY in TeamX's own region (see below for
+             why these two are treated differently).
+    Purpose: "who benefits if team X loses" -- operationalized as "TeamX
+             does not reach the Final Four" (a specific, meaningful,
+             bracket-relevant loss) rather than any one single game, so it
+             reuses the same 10,000-bracket Monte Carlo results every other
+             analysis in this module does, with no new simulation needed.
+             Final Four odds are included alongside championship odds
+             because a team can gain a much clearer path to the Final Four
+             (a near-term, high-probability shift) without that translating
+             into as large a championship-odds move (a longer-shot,
+             low-probability event) -- showing only one hides that
+             distinction.
+
+             The baseline is TeamY's real, ordinary odds (computed once
+             from the full 10,000-bracket sample), not TeamY's odds
+             conditioned on TeamX *reaching* the Final Four -- an earlier
+             version used that conditioned value as the baseline, which
+             was actively misleading for a big underdog TeamX: the
+             "TeamX reaches the Final Four" subset is tiny (or, for a
+             TeamX that never reaches it in any simulated bracket, exactly
+             empty), so every TeamY's baseline collapsed to ~0% regardless
+             of TeamY's real odds -- reading as "TeamY has basically no
+             chance today," when the intended baseline is TeamY's normal,
+             pretournament odds, the same number every other page on the
+             site reports for that team.
+
+             Final Four odds are region-scoped, Championship odds are not
+             -- these are genuinely different mathematical situations, not
+             an arbitrary choice:
+
+             Final Four odds: a real audit (2026-07-30) found teams
+             outside TeamX's own region showing small nonzero Final Four
+             benefit (e.g. +0.6 points) that turned out to be pure Monte
+             Carlo sampling noise from splitting 10,000 brackets into two
+             subsets -- confirmed against the expected standard error for
+             that split size, which matched the observed noise almost
+             exactly. This isn't a rounding nit: each region resolves its
+             own Final Four representative entirely independently of every
+             other region (they don't share a single game or a single
+             random draw until the national semifinals), so a
+             different-region team's Final Four odds are mathematically
+             guaranteed to be exactly unaffected by TeamX's fate -- any
+             nonzero movement shown there is definitionally noise, not
+             signal. For those pairs, the conditioned Final Four column is
+             set equal to TeamY's baseline, forcing FinalFourBenefit to
+             exactly 0.
+
+             Championship odds: unlike Final Four odds, a different-region
+             team's championship odds have a real, structural dependency
+             on TeamX regardless of region (2026-07-31 correction -- an
+             earlier version zeroed this out too, treating it as
+             indistinguishable from noise, which the user correctly
+             flagged as wrong for this specific metric). The championship
+             game itself is cross-region: TeamY's odds of reaching the
+             final are unaffected by TeamX (that's the Final Four
+             independence above), but TeamY's odds of *winning* the final
+             depend on who they'd face there -- and if TeamX (a strong
+             team) is eliminated before the Final Four, whoever emerges
+             from TeamX's side of the bracket instead is, on average, a
+             weaker team, which is a real (if often small for a distant
+             region) boost to every other team's championship odds, not
+             sampling noise. So `ChampionShareIfXEliminated` is always
+             computed from the real TeamX-eliminated bracket subset, for
+             every TeamY -- never forced to match the baseline the way
+             Final Four odds are for a different region.
+    """
+    champion_by_bracket = results.loc[results["Slot"] == champion_slot].set_index("Bracket")["TeamID"]
+    final_four_teams_by_bracket = (
+        results.loc[results["Slot"].map(round_of) == elimination_round_code].groupby("Bracket")["TeamID"].apply(set)
+    )
+    n_brackets = results["Bracket"].nunique()
+
+    # Full-sample rates: every TeamY's baseline (see docstring), and also
+    # the only correct value for a different-region pair's conditioned
+    # column.
+    overall_champion_share = champion_by_bracket.value_counts(normalize=True)
+    overall_final_four_share = final_four_teams_by_bracket.explode().value_counts() / n_brackets
+
+    rows = []
+    for team_x in team_ids:
+        reaches_final_four = final_four_teams_by_bracket.apply(lambda teams, tx=team_x: tx in teams)
+        eliminated_brackets = reaches_final_four[~reaches_final_four].index
+        n_eliminated = len(eliminated_brackets)
+
+        champ_share_if_eliminated = champion_by_bracket.loc[
+            champion_by_bracket.index.isin(eliminated_brackets)
+        ].value_counts(normalize=True)
+        # How often each OTHER team reaches the Final Four within the
+        # eliminated-TeamX bracket subset -- explode() turns each
+        # bracket's set of Final Four teams into one row per team, so
+        # value_counts() over the subset directly gives "how many of these
+        # brackets did TeamY reach the Final Four in."
+        final_four_counts_if_eliminated = (
+            final_four_teams_by_bracket.loc[eliminated_brackets].explode().value_counts()
+        )
+
+        for team_y in team_ids:
+            if team_y == team_x:
+                continue
+
+            champ_baseline = float(overall_champion_share.get(team_y, 0.0))
+            ff_baseline = float(overall_final_four_share.get(team_y, 0.0))
+
+            # Championship odds: always the real TeamX-eliminated subset,
+            # same-region or not -- see docstring for why this one isn't
+            # region-scoped.
+            champ_if_eliminated = float(champ_share_if_eliminated.get(team_y, 0.0))
+
+            if team_to_region.get(team_y) == team_to_region.get(team_x):
+                ff_if_eliminated = (
+                    float(final_four_counts_if_eliminated.get(team_y, 0)) / n_eliminated if n_eliminated else 0.0
+                )
+            else:
+                # Final Four odds ARE mathematically exactly independent of
+                # a different-region TeamX -- any movement in the real
+                # subset here would be pure sampling noise (see docstring).
+                ff_if_eliminated = ff_baseline
+
+            rows.append(
+                {
+                    "TeamX": team_x,
+                    "TeamY": team_y,
+                    "ChampionShareBaseline": champ_baseline,
+                    "ChampionShareIfXEliminated": champ_if_eliminated,
+                    "ChampionBenefit": champ_if_eliminated - champ_baseline,
+                    "FinalFourShareBaseline": ff_baseline,
+                    "FinalFourShareIfXEliminated": ff_if_eliminated,
+                    "FinalFourBenefit": ff_if_eliminated - ff_baseline,
+                }
+            )
+
+    return pd.DataFrame(rows)

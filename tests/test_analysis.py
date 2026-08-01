@@ -9,6 +9,7 @@ from march_madness.analysis.region_strength import (
 )
 from march_madness.analysis.round_advancement import (
     average_wins_by_team,
+    benefit_if_team_loses,
     cinderella_probability,
     count_wins_per_bracket,
     final_four_combination_counts,
@@ -131,6 +132,55 @@ def test_final_four_combination_counts():
 
     assert combos[tuple(sorted([101, 201, 301, 401]))] == 1
     assert combos[tuple(sorted([202, 302]))] == 1  # bracket 2 only had 2 teams reach R4 in this synthetic fixture
+
+
+def test_benefit_if_team_loses_flags_who_gains_when_a_team_is_eliminated():
+    results = make_synthetic_results()
+    team_ids = [101, 102, 201, 202, 301, 302, 401, 402]
+    team_to_region = {tid: region_of_seed(seed) for seed, tid in SEED_TO_TEAM.items()}
+
+    benefit = benefit_if_team_loses(results, team_ids, team_to_region).set_index(["TeamX", "TeamY"])
+
+    # 201 (region X) reaches the Final Four (R4) only in bracket 1; its own
+    # regional rival 202 (also region X) reaches it instead in bracket 2,
+    # winning outright. 202's baseline is its unconditional rate across
+    # both brackets (reaches R4 in 1 of 2 -> 0.5, wins the championship in
+    # 1 of 2 -> 0.5); conditioned on 201 being eliminated (bracket 2 only),
+    # 202 reaches R4 and wins it every time in that subset -> 1.0. Same
+    # region -> a real structural effect: only one region-X team can reach
+    # the Final Four per bracket, so 201 missing it directly means more
+    # room for 202.
+    same_region_row = benefit.loc[(201, 202)]
+    assert same_region_row["ChampionShareBaseline"] == 0.5
+    assert same_region_row["ChampionShareIfXEliminated"] == 1.0
+    assert same_region_row["ChampionBenefit"] == 0.5
+    assert same_region_row["FinalFourShareBaseline"] == 0.5
+    assert same_region_row["FinalFourShareIfXEliminated"] == 1.0
+    assert same_region_row["FinalFourBenefit"] == 0.5
+
+    # 101 (region W) and 202 (region X) are in DIFFERENT regions.
+    # Final Four odds: each region resolves its own Final Four
+    # representative independently, so 202's conditioned Final Four column
+    # must equal its own baseline (unconditional rate), with exactly zero
+    # FinalFourBenefit, regardless of what 101 does. (Naively conditioning
+    # here would show a nonzero "effect" driven entirely by this fixture's
+    # tiny 2-bracket sample -- exactly the kind of sampling-noise artifact
+    # this region check exists to prevent; see the function's docstring.)
+    # Championship odds: NOT region-scoped -- 101 being eliminated (bracket
+    # 2, where 202 wins the whole thing) is a real conditioned effect on
+    # 202's championship odds even though the two teams are in different
+    # regions, so ChampionShareIfXEliminated uses the real subset value
+    # (1.0, same as the same-region row above) rather than being forced to
+    # match the baseline.
+    cross_region_row = benefit.loc[(101, 202)]
+    assert cross_region_row["ChampionShareBaseline"] == 0.5
+    assert cross_region_row["ChampionShareIfXEliminated"] == 1.0
+    assert cross_region_row["ChampionBenefit"] == 0.5
+    assert cross_region_row["FinalFourBenefit"] == 0.0
+    assert cross_region_row["FinalFourShareBaseline"] == cross_region_row["FinalFourShareIfXEliminated"] == 0.5
+
+    # No row for a team against itself.
+    assert (101, 101) not in benefit.index
 
 
 def test_region_championship_counts():

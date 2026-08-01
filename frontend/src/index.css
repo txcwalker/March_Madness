@@ -491,6 +491,48 @@ td:first-child {
   right: 50%;
 }
 
+/* --- Stacked "before -> after" bar (Who Benefits) --- */
+.stacked-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 132px;
+  align-items: center;
+  gap: 14px;
+}
+.stacked-track {
+  position: relative;
+  height: 8px;
+  background: var(--rule);
+  border-radius: 1px;
+}
+.stacked-base {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--muted);
+  opacity: 0.5;
+  border-radius: 1px;
+}
+.stacked-delta {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 1px;
+}
+.stacked-delta.gain {
+  background: var(--accent);
+}
+.stacked-delta.loss {
+  background: var(--under);
+}
+.stacked-value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* --- Coming soon --- */
 .coming-soon {
   padding: 96px 32px;

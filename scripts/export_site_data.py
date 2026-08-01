@@ -188,6 +188,88 @@ def build_final_four_payload(results: pd.DataFrame, id_to_team: pd.Series, n_bra
     ]
 
 
+def build_path_of_least_resistance_payload(path_ease: pd.DataFrame, id_to_team: pd.Series) -> list[dict]:
+    """
+    Inputs: path_of_least_resistance.csv (written by run_pipeline.py, since
+            it needs the win-probability matrix and the raw per-bracket
+            Monte Carlo results -- only available there, not from
+            simulation_results.csv's on-disk aggregate form) and the
+            TeamID -> name lookup.
+    Outputs: one dict per team with its average opponent strength faced at
+             each of the four rounds, PathStrengthFaced (the primary,
+             seed-agnostic "how tough is the draw" number -- see
+             analysis/bracket_path.py's module docstring), and PathEase
+             (the secondary, team-relative "are you still favored" number).
+             Sorted easiest-draw-first by PathStrengthFaced (already sorted
+             this way in the CSV, re-sorted here defensively).
+    """
+    strength_columns = {
+        "RoundOf32Strength": "roundOf32Strength",
+        "SweetSixteenStrength": "sweetSixteenStrength",
+        "EliteEightStrength": "eliteEightStrength",
+        "FinalFourStrength": "finalFourStrength",
+    }
+    rows = []
+    for row in path_ease.to_dict("records"):
+        record = {
+            "teamId": int(row["TeamID"]),
+            "team": id_to_team.get(row["TeamID"], str(row["TeamID"])),
+            "pathStrengthFaced": round(float(row["PathStrengthFaced"]), 4),
+            "pathEase": round(float(row["PathEase"]), 4),
+        }
+        for csv_col, json_key in strength_columns.items():
+            value = row[csv_col]
+            record[json_key] = round(float(value), 4) if pd.notna(value) else None
+        rows.append(record)
+    rows.sort(key=lambda r: r["pathStrengthFaced"])
+    return rows
+
+
+def build_benefit_if_loses_payload(
+    results: pd.DataFrame, team_ids: list[int], team_to_region: dict[int, str], id_to_team: pd.Series
+) -> dict[str, list[dict]]:
+    """
+    Inputs: simulation results, every team's TeamID, TeamID -> region, and
+            the TeamID -> name lookup.
+    Outputs: {TeamX's TeamID (as a string, since JSON object keys are always
+             strings) -> the FULL list of every other team's benefit if
+             TeamX doesn't reach the Final Four (not capped -- the frontend
+             independently ranks and slices Final Four odds by
+             finalFourBenefit and championship odds by championBenefit,
+             since those two rankings surface different teams; a single
+             server-side sort/cap would throw away one of them). Default
+             order here is by ChampionBenefit, but that's just a
+             convenience default, not load-bearing.
+    Purpose: the "Who Benefits if Team X Loses" page picks a team from a
+             dropdown and shows this list directly -- see
+             analysis/round_advancement.py's benefit_if_team_loses() for
+             what "loses" means here (doesn't reach the Final Four), and
+             why Final Four odds are region-scoped but championship odds
+             are not (a different-region team's Final Four odds can't
+             actually be affected by TeamX at all -- any nonzero number
+             there would be Monte Carlo noise, not a real effect -- but
+             their championship odds have a real cross-region dependency).
+    """
+    benefit = round_advancement.benefit_if_team_loses(results, team_ids, team_to_region)
+    payload: dict[str, list[dict]] = {}
+    for team_x, group in benefit.groupby("TeamX"):
+        ranked = group.sort_values("ChampionBenefit", ascending=False)
+        payload[str(int(team_x))] = [
+            {
+                "teamId": int(row.TeamY),
+                "team": id_to_team.get(row.TeamY, str(row.TeamY)),
+                "championBenefit": round(float(row.ChampionBenefit), 4),
+                "championShareBaseline": round(float(row.ChampionShareBaseline), 4),
+                "championShareIfXEliminated": round(float(row.ChampionShareIfXEliminated), 4),
+                "finalFourBenefit": round(float(row.FinalFourBenefit), 4),
+                "finalFourShareBaseline": round(float(row.FinalFourShareBaseline), 4),
+                "finalFourShareIfXEliminated": round(float(row.FinalFourShareIfXEliminated), 4),
+            }
+            for row in ranked.itertuples()
+        ]
+    return payload
+
+
 def build_cinderella_payload(results: pd.DataFrame, seed_by_team: dict[int, int]) -> list[dict]:
     """8 seed thresholds x 5 rounds -> probability at least one that-seed-or-worse team reached that round."""
     return [
@@ -222,6 +304,9 @@ def main() -> None:
     results = pd.read_csv(results_path)
     teams = pd.read_csv(teams_path)
 
+    path_ease_path = outputs / "path_of_least_resistance.csv"
+    path_ease = pd.read_csv(path_ease_path) if path_ease_path.exists() else None
+
     # seed_predictions.csv / team_tiers.csv are deliberately NOT included yet:
     # both are keyed by KenPom's raw team-name string, not Kaggle's TeamID
     # (seed_knn/seed_clustering operate on KenPom data directly and never see
@@ -249,6 +334,12 @@ def main() -> None:
         "regions": build_region_payload(results, seed_to_team, id_to_team),
         "finalFourCombos": build_final_four_payload(results, id_to_team, n_brackets),
         "cinderella": build_cinderella_payload(results, seed_by_team),
+        "pathOfLeastResistance": (
+            build_path_of_least_resistance_payload(path_ease, id_to_team) if path_ease is not None else []
+        ),
+        "benefitIfLoses": build_benefit_if_loses_payload(
+            results, list(seed_to_team.values()), team_to_region, id_to_team
+        ),
     }
 
     args.out.mkdir(parents=True, exist_ok=True)

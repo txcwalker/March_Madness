@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from march_madness.analysis import region_strength, round_advancement
+from march_madness.analysis import bracket_path, region_strength, round_advancement
 from march_madness.bracket.simulate import build_seed_to_team, compute_win_probabilities, run_monte_carlo
 from march_madness.bracket.structure import (
     MAIN_BRACKET_SIZE,
@@ -143,6 +143,16 @@ def main() -> None:
     results_path = config.outputs_dir / "simulation_results.csv"
     results.to_csv(results_path, index=False)
     print(f"  wrote {results_path}")
+
+    # Path of Least Resistance needs the win-probability matrix and the raw
+    # per-bracket results (only available here, not from
+    # simulation_results.csv's on-disk aggregate form), so it's computed and
+    # written now rather than deferred to export_site_data.py like the other
+    # analyses below.
+    path_ease = bracket_path.path_of_least_resistance(ordered_slots, seed_to_team, win_probs, results)
+    path_ease_path = config.outputs_dir / "path_of_least_resistance.csv"
+    path_ease.to_csv(path_ease_path, index=False)
+    print(f"  wrote {path_ease_path}")
 
     print("\n[5/6] Summarizing results...")
     id_to_team = kaggle.teams.set_index("TeamID")["TeamName"]
