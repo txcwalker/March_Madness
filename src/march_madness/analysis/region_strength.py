@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from march_madness.analysis.bracket_path import average_win_probability, resolve_slot_winners_by_bracket
 from march_madness.bracket.structure import round_of
 
 
@@ -23,6 +24,26 @@ def region_of_seed(seed: str) -> str:
     mapping to real names (if wanted for presentation) is Milestone 2's job.
     """
     return seed[0]
+
+
+def region_of_main_bracket_slot(slot: str) -> str | None:
+    """
+    Inputs: a bracket slot code.
+    Outputs: the region letter for an R1-R4 slot (e.g. "R2W1" -> "W") --
+             the region character always sits right after the round digit
+             for these four rounds (confirmed against the real 2026
+             MNCAATourneySlots.csv: "R1W1".."R1W8", "R2W1".."R2W4",
+             "R3W1"/"R3W2", "R4W1"). None for anything else: a play-in
+             slot, or R5/R6 (e.g. "R5WX", "R6CH"), which pair two
+             *different* regions together and so don't belong to just one.
+    Purpose: region_competitiveness() needs to know which of a season's
+             63 main-bracket games belong to which region; slot codes
+             encode that directly, no lookup table needed.
+    """
+    code = round_of(slot)
+    if code not in {"R1", "R2", "R3", "R4"}:
+        return None
+    return slot[len(code)]
 
 
 def region_championship_counts(results: pd.DataFrame, seed_to_team: dict[str, int]) -> pd.Series:
@@ -116,3 +137,126 @@ def region_top_seed_championship_share(results: pd.DataFrame, seed_to_team: dict
         shares[region] = top_seed_wins / total if total > 0 else 0.0
 
     return pd.Series(shares, name="TopSeedChampionshipShare")
+
+
+def region_competitiveness(
+    slots: pd.DataFrame,
+    seed_to_team: dict[str, int],
+    win_probabilities: dict[int, dict[int, float]],
+    results: pd.DataFrame,
+) -> pd.Series:
+    """
+    Inputs: one season's slots, its Seed -> TeamID mapping, the
+            (symmetrized) win-probability matrix from
+            bracket.simulate.compute_win_probabilities(), and the raw
+            long-format Monte Carlo results from
+            bracket.simulate.run_monte_carlo().
+    Outputs: {region: average outcome uncertainty across every game
+             actually played within that region (R1-R4 only -- R5/R6 pair
+             two different regions and aren't "that region's" game),
+             across all 10,000 simulated brackets}. Closeness for a single
+             game is `2 * (1 - favorite's win probability)`: 1.0 at a
+             50/50 tossup, 0.0 at a lock. Averaging across every
+             region-internal game gives a 0-1 score per region: 1.0 means
+             every game in that region was close to a coin flip, 0.0 means
+             every game was a near-certainty.
+
+             This measures how UNPREDICTABLE THE WINNER is, not margin of
+             victory -- a 90/10 favorite can still win by one point, and a
+             55/45 game can be a blowout. This metric only ever looks at
+             pregame win probability, never a simulated score, so don't
+             read it as "how close the games were on the scoreboard."
+
+             Deliberately distinct from region_top_seed_final_four_share/
+             region_top_seed_championship_share, which measure whether the
+             *presumed-best* team actually succeeds. A region can score low
+             here (every game a near-lock) while still looking "fragile" by
+             those metrics if the team doing all the winning isn't the top
+             seed; a region can score high here (every game a tossup) while
+             still looking "dominant" by those metrics if the same team
+             keeps winning its coin flips anyway. Neither metric replaces
+             the other -- see WORKLOG for the "Duke keeps winning, but the
+             other games are all coin flips" case that motivated this.
+
+             The first round's games don't actually need the 10,000-bracket
+             loop (both teams are directly seeded, identical in every
+             bracket), but this doesn't special-case that -- looping
+             uniformly keeps the logic simple and the redundant work is
+             cheap relative to the whole pipeline.
+    """
+    region_games = slots[slots["Slot"].map(region_of_main_bracket_slot).notna()].copy()
+    region_games["Region"] = region_games["Slot"].map(region_of_main_bracket_slot)
+    brackets = resolve_slot_winners_by_bracket(results)
+
+    closeness_by_region: dict[str, list[float]] = {}
+    for row in region_games.itertuples():
+        for bracket_winners in brackets.values():
+            team1 = (
+                seed_to_team[row.StrongSeed] if row.StrongSeed in seed_to_team else bracket_winners[row.StrongSeed]
+            )
+            team2 = seed_to_team[row.WeakSeed] if row.WeakSeed in seed_to_team else bracket_winners[row.WeakSeed]
+            favorite_win_prob = max(win_probabilities[team1][team2], win_probabilities[team2][team1])
+            closeness = 2 * (1 - favorite_win_prob)
+            closeness_by_region.setdefault(row.Region, []).append(closeness)
+
+    return pd.Series(
+        {region: sum(values) / len(values) for region, values in closeness_by_region.items()},
+        name="Competitiveness",
+    )
+
+
+def strongest_team_by_region(
+    team_to_region: dict[int, str], win_probabilities: dict[int, dict[int, float]]
+) -> dict[str, int]:
+    """
+    Inputs: TeamID -> region mapping and the (symmetrized) win-probability
+            matrix from bracket.simulate.compute_win_probabilities().
+    Outputs: {region: TeamID of that region's model-implied strongest
+             team} -- ranked by average_win_probability() (mean win
+             probability against the whole field), not by seed number.
+    Purpose: the "favorite" to condition region_effective_contenders() on.
+             Deliberately not just "whichever team has Seed == 1" the way
+             region_top_seed_*_share() picks its reference team -- the
+             seed-prediction discussion in WORKLOG.md concluded a seed
+             number isn't a reliable stand-in for actual team strength, and
+             this metric shouldn't inherit that problem just because the
+             other region metrics (which are specifically ABOUT the top
+             seed, on purpose) do.
+    """
+    strength = average_win_probability(win_probabilities)
+    strongest: dict[str, int] = {}
+    for team_id, region in team_to_region.items():
+        if region not in strongest or strength[team_id] > strength[strongest[region]]:
+            strongest[region] = team_id
+    return strongest
+
+
+def region_effective_contenders(
+    benefit: pd.DataFrame, team_to_region: dict[int, str], favorite_by_region: dict[str, int]
+) -> pd.Series:
+    """
+    Inputs: analysis.round_advancement.benefit_if_team_loses()'s output,
+            TeamID -> region, and {region: favorite TeamID} (see
+            strongest_team_by_region()).
+    Outputs: {region: effective number of realistic Final Four contenders
+             if that region's favorite doesn't make it}. Computed as the
+             reciprocal of the Herfindahl-Hirschman Index (a standard
+             market-concentration statistic): HHI = the sum of squared
+             FinalFourShareIfXEliminated across the region's other teams,
+             with TeamX fixed to that region's favorite. These shares
+             already form a real probability distribution -- they sum to
+             ~1.0 across the region's other teams, since exactly one
+             non-favorite team represents the region in every bracket
+             where the favorite doesn't. 1/HHI ranges from 1 (one
+             overwhelming backup, nobody else has a real shot) up toward
+             the number of teams in the region (every team equally live).
+             A region with a clean 50% favorite and three genuinely equal
+             backups scores almost exactly 3 here -- see WORKLOG for the
+             worked textbook check.
+    """
+    contenders: dict[str, float | None] = {}
+    for region, team_x in favorite_by_region.items():
+        rows = benefit[(benefit["TeamX"] == team_x) & (benefit["TeamY"].map(team_to_region) == region)]
+        hhi = float((rows["FinalFourShareIfXEliminated"] ** 2).sum())
+        contenders[region] = (1 / hhi) if hhi > 0 else None
+    return pd.Series(contenders, name="EffectiveContenders")

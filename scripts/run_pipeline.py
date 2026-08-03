@@ -154,6 +154,24 @@ def main() -> None:
     path_ease.to_csv(path_ease_path, index=False)
     print(f"  wrote {path_ease_path}")
 
+    # Region Competitiveness (outcome uncertainty within each region's own
+    # games) and each region's model-implied favorite both need the
+    # win-probability matrix too, for the same reason as Path of Least
+    # Resistance above -- computed and written here, not deferred to
+    # export_site_data.py.
+    team_to_region = {team_id: region_strength.region_of_seed(seed) for seed, team_id in seed_to_team.items()}
+    competitiveness = region_strength.region_competitiveness(ordered_slots, seed_to_team, win_probs, results)
+    favorite_by_region = region_strength.strongest_team_by_region(team_to_region, win_probs)
+    region_competitiveness_df = pd.DataFrame(
+        [
+            {"Region": region, "Competitiveness": competitiveness[region], "FavoriteTeamID": favorite_by_region[region]}
+            for region in sorted(favorite_by_region)
+        ]
+    )
+    region_competitiveness_path = config.outputs_dir / "region_competitiveness.csv"
+    region_competitiveness_df.to_csv(region_competitiveness_path, index=False)
+    print(f"  wrote {region_competitiveness_path}")
+
     print("\n[5/6] Summarizing results...")
     id_to_team = kaggle.teams.set_index("TeamID")["TeamName"]
     seed_by_team = {team_id: int(seed[1:3]) for seed, team_id in seed_to_team.items()}

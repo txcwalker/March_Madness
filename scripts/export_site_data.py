@@ -129,17 +129,39 @@ def build_teams_payload(
     return payload
 
 
-def build_region_payload(results: pd.DataFrame, seed_to_team: dict[str, int], id_to_team: pd.Series) -> list[dict]:
+def build_region_payload(
+    results: pd.DataFrame,
+    seed_to_team: dict[str, int],
+    id_to_team: pd.Series,
+    team_to_region: dict[int, str],
+    benefit: pd.DataFrame,
+    region_competitiveness_df: pd.DataFrame | None,
+) -> list[dict]:
     """
-    Region-level championship share plus how top-heavy/fragile each region
-    is. `topSeedFinalFourShare` (not `topSeedChampionshipShare`) is the
-    headline fragility figure as of 2026-07-30 -- a real audit found the
-    championship-conditioned version both conflates a region's own
-    competitiveness with cross-region championship-game strength, and is
-    statistically unstable for any region that rarely wins it all (see
-    analysis/region_strength.py docstrings for the full reasoning and real
-    numbers). The championship-conditioned share is still exported as a
-    secondary figure, not dropped.
+    Region-level championship share plus two complementary families of
+    "how strong/fragile is this region" stats. `topSeedFinalFourShare`
+    (not `topSeedChampionshipShare`) is the headline top-seed-dominance
+    figure as of 2026-07-30 -- a real audit found the championship-
+    conditioned version both conflates a region's own competitiveness with
+    cross-region championship-game strength, and is statistically unstable
+    for any region that rarely wins it all (see analysis/region_strength.py
+    docstrings for the full reasoning and real numbers). The championship-
+    conditioned share is still exported as a secondary figure, not dropped.
+
+    `competitiveness` and `effectiveContenders` (2026-08-03) answer a
+    different question those top-seed-dominance stats can't: whether the
+    region's own games are actually close, and how open the region is if
+    its favorite doesn't come through -- see analysis/region_strength.py's
+    region_competitiveness()/region_effective_contenders() docstrings and
+    WORKLOG for why a region can score as "dominant" by the top-seed stats
+    while still being genuinely competitive by these, or vice versa.
+    `competitiveness`/`favoriteTeamId` come from region_competitiveness.csv
+    (written by run_pipeline.py, since they need the win-probability
+    matrix -- absent if that file hasn't been generated yet, e.g. an older
+    run_pipeline.py output directory). `effectiveContenders` is computed
+    here from `benefit` (already built from simulation_results.csv for the
+    Who Benefits payload, reused rather than recomputed) plus that CSV's
+    favorite-team column.
     """
     champ_counts = region_strength.region_championship_counts(results, seed_to_team)
     final_four_share = region_strength.region_top_seed_final_four_share(results, seed_to_team)
@@ -150,8 +172,22 @@ def build_region_payload(results: pd.DataFrame, seed_to_team: dict[str, int], id
         region_strength.region_of_seed(seed): team_id for seed, team_id in seed_to_team.items() if seed[1:3] == "01"
     }
 
+    competitiveness_by_region: dict[str, float] = {}
+    favorite_by_region: dict[str, int] = {}
+    if region_competitiveness_df is not None:
+        for row in region_competitiveness_df.itertuples():
+            competitiveness_by_region[row.Region] = float(row.Competitiveness)
+            favorite_by_region[row.Region] = int(row.FavoriteTeamID)
+    effective_contenders = (
+        region_strength.region_effective_contenders(benefit, team_to_region, favorite_by_region)
+        if favorite_by_region
+        else pd.Series(dtype=float)
+    )
+
     regions = []
     for region in sorted(set(champ_counts.index) | set(final_four_share.index)):
+        favorite_team_id = favorite_by_region.get(region)
+        contenders = effective_contenders.get(region)
         regions.append(
             {
                 "region": region,
@@ -160,6 +196,12 @@ def build_region_payload(results: pd.DataFrame, seed_to_team: dict[str, int], id
                 "topSeedChampionshipShare": round(float(championship_share.get(region, 0.0)), 4),
                 "topSeedTeamId": top_seed_by_region.get(region),
                 "topSeedTeam": id_to_team.get(top_seed_by_region.get(region)),
+                "competitiveness": (
+                    round(competitiveness_by_region[region], 4) if region in competitiveness_by_region else None
+                ),
+                "favoriteTeamId": favorite_team_id,
+                "favoriteTeam": id_to_team.get(favorite_team_id) if favorite_team_id is not None else None,
+                "effectiveContenders": round(float(contenders), 4) if pd.notna(contenders) else None,
             }
         )
     regions.sort(key=lambda r: r["championshipShare"], reverse=True)
@@ -225,12 +267,12 @@ def build_path_of_least_resistance_payload(path_ease: pd.DataFrame, id_to_team: 
     return rows
 
 
-def build_benefit_if_loses_payload(
-    results: pd.DataFrame, team_ids: list[int], team_to_region: dict[int, str], id_to_team: pd.Series
-) -> dict[str, list[dict]]:
+def build_benefit_if_loses_payload(benefit: pd.DataFrame, id_to_team: pd.Series) -> dict[str, list[dict]]:
     """
-    Inputs: simulation results, every team's TeamID, TeamID -> region, and
-            the TeamID -> name lookup.
+    Inputs: analysis.round_advancement.benefit_if_team_loses()'s output
+            (computed once in main() -- also reused by build_region_payload
+            for region_effective_contenders(), so it isn't recomputed here)
+            and the TeamID -> name lookup.
     Outputs: {TeamX's TeamID (as a string, since JSON object keys are always
              strings) -> the FULL list of every other team's benefit if
              TeamX doesn't reach the Final Four (not capped -- the frontend
@@ -250,7 +292,6 @@ def build_benefit_if_loses_payload(
              there would be Monte Carlo noise, not a real effect -- but
              their championship odds have a real cross-region dependency).
     """
-    benefit = round_advancement.benefit_if_team_loses(results, team_ids, team_to_region)
     payload: dict[str, list[dict]] = {}
     for team_x, group in benefit.groupby("TeamX"):
         ranked = group.sort_values("ChampionBenefit", ascending=False)
@@ -307,6 +348,9 @@ def main() -> None:
     path_ease_path = outputs / "path_of_least_resistance.csv"
     path_ease = pd.read_csv(path_ease_path) if path_ease_path.exists() else None
 
+    region_competitiveness_path = outputs / "region_competitiveness.csv"
+    region_competitiveness_df = pd.read_csv(region_competitiveness_path) if region_competitiveness_path.exists() else None
+
     # seed_predictions.csv / team_tiers.csv are deliberately NOT included yet:
     # both are keyed by KenPom's raw team-name string, not Kaggle's TeamID
     # (seed_knn/seed_clustering operate on KenPom data directly and never see
@@ -326,20 +370,25 @@ def main() -> None:
     advancement["Team"] = advancement["TeamID"].map(id_to_team)
     wins_over_seed = round_advancement.wins_over_seed_expectation(results, seed_by_team)
 
+    # Computed once, shared by both the Who Benefits payload and
+    # region_effective_contenders() (see build_region_payload's docstring)
+    # rather than built twice.
+    benefit = round_advancement.benefit_if_team_loses(results, list(seed_to_team.values()), team_to_region)
+
     payload = {
         "season": config.year,
         "nBrackets": n_brackets,
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "teams": build_teams_payload(teams, advancement, wins_over_seed, seed_by_team, team_to_region, n_brackets),
-        "regions": build_region_payload(results, seed_to_team, id_to_team),
+        "regions": build_region_payload(
+            results, seed_to_team, id_to_team, team_to_region, benefit, region_competitiveness_df
+        ),
         "finalFourCombos": build_final_four_payload(results, id_to_team, n_brackets),
         "cinderella": build_cinderella_payload(results, seed_by_team),
         "pathOfLeastResistance": (
             build_path_of_least_resistance_payload(path_ease, id_to_team) if path_ease is not None else []
         ),
-        "benefitIfLoses": build_benefit_if_loses_payload(
-            results, list(seed_to_team.values()), team_to_region, id_to_team
-        ),
+        "benefitIfLoses": build_benefit_if_loses_payload(benefit, id_to_team),
     }
 
     args.out.mkdir(parents=True, exist_ok=True)
