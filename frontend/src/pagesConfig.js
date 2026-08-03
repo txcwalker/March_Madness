@@ -10,5 +10,4 @@ export const PAGES = [
   { id: 'region-strength', label: 'Region Strength', showInNav: true },
   { id: 'path-of-least-resistance', label: 'Path of Least Resistance', showInNav: true },
   { id: 'who-benefits', label: 'Who Benefits', showInNav: true },
-  { id: 'seed-prediction', label: 'Seed Prediction', showInNav: true },
 ]

@@ -11,7 +11,6 @@ import FinalFourFinder from './pages/FinalFourFinder'
 import RegionStrength from './pages/RegionStrength'
 import PathOfLeastResistance from './pages/PathOfLeastResistance'
 import WhoBenefits from './pages/WhoBenefits'
-import ComingSoon from './pages/ComingSoon'
 
 const THEME_KEY = 'cutdown-theme'
 
@@ -83,8 +82,6 @@ export default function App() {
         return <PathOfLeastResistance data={data} />
       case 'who-benefits':
         return <WhoBenefits data={data} />
-      case 'seed-prediction':
-        return <ComingSoon pageId={currentPage} />
       default:
         return <Home data={data} navigate={navigate} />
     }
